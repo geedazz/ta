@@ -80,9 +80,15 @@ def fetch(query: str):
 
 
 def q(*parts) -> str:
-    # Kableliai select() sarase ir dvitaskiai privalo likti neuzkoduoti:
-    # %2C Spinta grazina HTTP 500.
-    safe = "()<>=\"',-_.:/*"
+    """Perkoduoja uzklausa taip pat, kaip tai daro narsykle.
+
+    Du dalykai, kuriuos isaiskino bandymai:
+      - kableliai select() sarase privalo likti NEUZKODUOTI (%2C -> HTTP 500);
+      - kabutes filtro reiksmeje privalo buti UZKODUOTOS (%22). Narsykles
+        adreso juostoje matote kabutes, bet i serverva keliauja %22, ir
+        neapdorotos kabutes serverui yra netaisyklingas URL.
+    """
+    safe = "()<>=',-_.:/*"
     return "&".join(urllib.parse.quote(p, safe=safe) for p in parts)
 
 
