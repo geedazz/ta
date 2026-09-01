@@ -28,7 +28,7 @@ OUT = os.path.join(ROOT, "docs", "data", "tar.json")
 # Kiek dienu atgal ziurime naujai uzregistruotus aktus.
 RECENT_DAYS = int(os.environ.get("TAR_RECENT_DAYS", "3"))
 # Serveris grazina puslapiais; jei pasiekiamas sis skaicius, langas per platus.
-PAGE_LIMIT = int(os.environ.get("TAR_LIMIT", "500"))
+PAGE_LIMIT = int(os.environ.get("TAR_LIMIT", "100"))
 
 _FORMAT = None
 
@@ -36,7 +36,7 @@ _FORMAT = None
 LIST_FIELDS = (
     "_id,pavadinimas,rusis,dok_grupe,parengusi_inst,priemusi_inst,"
     "tar_kodas,atv_dok_nr,nuoroda,registracija,priimtas,paskelbta_tar,"
-    "isigalioja,negalioja,galioj_busena,ar_verslo_reg"
+    "isigalioja,negalioja,galioj_busena,ar_nacionalinis,ar_verslo_reg"
 )
 
 HEADERS = {
