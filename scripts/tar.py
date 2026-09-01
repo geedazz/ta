@@ -16,6 +16,7 @@ import json
 import os
 import sys
 import urllib.parse
+import urllib.error
 import urllib.request
 from datetime import date, datetime, timedelta, timezone
 
@@ -46,16 +47,28 @@ LIST_FIELDS = (
     "paskelbta_tar,isigalioja,galioj_busena,ar_nacionalinis"
 )
 
+# Kuo arciau to, ka siuncia narsykle. Ankstesnis variantas su
+# "Accept: application/json" ir savo prisistatymu grazindavo HTTP 500.
 HEADERS = {
-    "User-Agent": "tais-monitor (github actions)",
-    "Accept": "application/json",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                  "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "lt,en;q=0.8",
 }
 
 
 def _get(url: str):
     req = urllib.request.Request(url, headers=HEADERS)
-    with urllib.request.urlopen(req, timeout=120) as r:
-        return json.load(r)
+    try:
+        with urllib.request.urlopen(req, timeout=120) as r:
+            return json.load(r)
+    except urllib.error.HTTPError as exc:
+        # Spinta prie klaidos prideda paaiskinima; be jo lieka tik speliojimas.
+        try:
+            detail = exc.read().decode("utf-8", "replace")[:600].replace("\n", " ")
+        except Exception:  # noqa: BLE001
+            detail = "(atsakymo kuno perskaityti nepavyko)"
+        raise RuntimeError(f"{exc.code} {exc.reason} | serveris atsake: {detail}") from None
 
 
 def fetch(query: str):
@@ -64,7 +77,7 @@ def fetch(query: str):
     Pirmas suveikes budas isimenamas, kad likusios uzklausos jo nebeieskotu.
     """
     global _FORMAT
-    candidates = [_FORMAT] if _FORMAT else ["/:format/json?", "?format(json)&", "?"]
+    candidates = [_FORMAT] if _FORMAT else ["/:format/json?", "?format(json)&"]
     last = None
     for mode in candidates:
         url = BASE + mode + query
