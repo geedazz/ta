@@ -1,0 +1,50 @@
+name: TAIS dienos srautas
+
+on:
+  schedule:
+    - cron: "15 11 * * *"
+    - cron: "15 16 * * *"
+    - cron: "15 20 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tais-fetch
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Nuskaityti srauta
+        run: python scripts/fetch.py
+
+      - name: Nuskaityti teises aktu registra
+        continue-on-error: true
+        run: python scripts/tar.py
+
+      - name: Ivertinti su Claude
+        if: env.ANTHROPIC_API_KEY != ''
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python scripts/triage.py
+
+      - name: Issaugoti
+        run: |
+          git config user.name  "tais-bot"
+          git config user.email "tais-bot@users.noreply.github.com"
+          git add data docs/data
+          if git diff --staged --quiet; then
+            echo "Pakeitimu nera"
+          else
+            git commit -m "TAIS $(date -u +%Y-%m-%d)"
+            git push
+          fi
