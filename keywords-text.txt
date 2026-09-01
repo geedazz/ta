@@ -1,0 +1,18 @@
+# Siauresnis sarasas, naudojamas paieskai PILNAME akto tekste.
+#
+# Antrastese galima ieskoti placiai. Tekste - ne: "asmens duomen" ar "elektros"
+# pasitaiko beveik kiekviename akte, todel bendri zodziai cia duoda triuksma.
+# Rasykite frazes, ne saknis.
+#
+# Jei sio failo nera, paieska tekste isjungiama.
+šilumos ūkio
+daugiabučio namo bendrojo naudojimo
+pastatų administravimo
+bendrojo naudojimo objekt
+maksimalaus tarifo
+maksimalūs tarifai
+maksimalių tarifų
+techninės priežiūros tarif
+administravimo tarif
+šildymo ir karšto vandens sistem
+butų ir kitų patalpų savininkų

@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TAIS projektų stebėsena</title>
+<style>
+  :root{
+    --paper:#F3F4F1; --card:#FFFFFF; --ink:#191D1B; --muted:#6A716D;
+    --rule:#D8DBD5; --deep:#12403A; --mark:#FFE9A8; --warn:#9A4B12;
+    --sans: ui-sans-serif,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  a{color:var(--deep)}
+  button,input,textarea,select{font:inherit;color:inherit}
+  .wrap{max-width:1240px;margin:0 auto;padding:28px 22px 80px}
+  header.top{display:flex;flex-wrap:wrap;align-items:baseline;gap:14px 22px;padding-bottom:16px;border-bottom:2px solid var(--deep);margin-bottom:22px}
+  header.top h1{font-family:var(--serif);font-weight:600;font-size:27px;letter-spacing:-.01em;margin:0}
+  .feedinfo{color:var(--muted);font-size:13.5px}
+  .feedinfo b{color:var(--ink);font-weight:600}
+  .layout{display:grid;grid-template-columns:290px 1fr;gap:30px;align-items:start}
+  @media (max-width:900px){.layout{grid-template-columns:1fr}}
+  aside{position:sticky;top:20px}
+  @media (max-width:900px){aside{position:static}}
+  .panel{background:var(--card);border:1px solid var(--rule);padding:16px;margin-bottom:16px}
+  .panel h2{font-size:13.5px;font-weight:600;margin:0 0 10px;color:var(--deep)}
+  .hint{font-size:12.5px;color:var(--muted);margin:6px 0 0}
+  textarea{width:100%;min-height:150px;resize:vertical;border:1px solid var(--rule);padding:9px 10px;font-size:13.5px;line-height:1.45;background:#FCFCFB}
+  textarea:focus,input:focus,select:focus,button:focus-visible{outline:2px solid var(--deep);outline-offset:1px}
+  .btn{background:var(--deep);color:#fff;border:0;padding:8px 14px;cursor:pointer;font-size:13.5px;font-weight:500}
+  .btn.ghost{background:transparent;color:var(--deep);border:1px solid var(--rule)}
+  .btn:hover{opacity:.88}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+  label.check{display:flex;gap:7px;align-items:center;font-size:13.5px;cursor:pointer;margin-bottom:5px}
+  select,input[type=search]{border:1px solid var(--rule);padding:7px 9px;background:#FCFCFB;width:100%}
+  .count{font-family:var(--serif);font-size:34px;line-height:1;font-weight:600}
+  .count small{font-family:var(--sans);font-size:13px;font-weight:400;color:var(--muted);display:block;margin-top:5px}
+  .item{background:var(--card);border:1px solid var(--rule);border-left:3px solid var(--rule);padding:15px 17px;margin-bottom:11px}
+  .item.hit{border-left-color:var(--deep)}
+  .item.s3{border-left-width:5px}
+  .item h3{font-family:var(--serif);font-size:17.5px;font-weight:600;line-height:1.34;margin:0 0 8px;max-width:74ch}
+  .item h3 a{text-decoration:none}
+  .item h3 a:hover{text-decoration:underline}
+  mark{background:var(--mark);padding:0 1px}
+  .meta{font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 14px;margin-bottom:9px}
+  .meta b{color:var(--ink);font-weight:600}
+  .chip{display:inline-block;font-size:11.5px;padding:2px 8px;border:1px solid var(--rule);background:#F7F8F6;color:var(--muted);margin:0 6px 6px 0}
+  .chip.kw{background:var(--mark);border-color:#E4C86B;color:#4A3A08}
+  .chip.due{background:#FBF0E4;border-color:#E0BE95;color:var(--warn);font-weight:600}
+  .chip.status{background:#EDF3F0;border-color:#BFD4CA;color:var(--deep)}
+  .chip.sc{background:var(--deep);border-color:var(--deep);color:#fff;font-weight:600}
+  .why{font-size:13.5px;color:var(--ink);background:#F7F9F7;border-left:2px solid var(--deep);padding:7px 11px;margin:2px 0 9px;max-width:70ch}
+  .strip{border-top:1px solid var(--rule);margin-top:10px;padding-top:9px;font-size:12.8px;color:var(--muted)}
+  .strip .when{color:var(--ink);font-variant-numeric:tabular-nums}
+  .files a{margin-right:12px;font-size:12.8px}
+  .tab{background:transparent;border:1px solid var(--rule);border-right:0;padding:6px 15px;cursor:pointer;font-size:13.5px;color:var(--muted)}
+  .tab:last-child{border-right:1px solid var(--rule)}
+  .tab.on{background:var(--deep);border-color:var(--deep);color:#fff;font-weight:500}
+  .note{font-size:12.5px;color:var(--warn);background:#FBF0E4;border:1px solid #E0BE95;padding:8px 11px;margin-bottom:12px}
+  .empty{padding:56px 20px;text-align:center;color:var(--muted);background:var(--card);border:1px solid var(--rule)}
+  .empty p{max-width:46ch;margin:0 auto}
+  .err{background:#FBEEE8;border:1px solid #E0BE95;color:var(--warn);padding:11px 13px;font-size:13.5px;margin-bottom:14px}
+  details summary{cursor:pointer;font-size:12.8px;color:var(--deep);margin-top:8px}
+  details ul{margin:7px 0 0;padding-left:18px;font-size:12.8px;color:var(--muted)}
+  details li{margin-bottom:3px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>TAIS projektų stebėsena</h1>
+    <div class="feedinfo" id="feedinfo">Kraunama…</div>
+    <nav class="tabs" style="flex:1 0 auto;display:flex;gap:0;justify-content:flex-end">
+      <button class="tab on" data-tab="tap">Projektai</button>
+      <button class="tab" data-tab="tar">Teisės aktai</button>
+    </nav>
+  </header>
+
+  <div class="layout">
+    <aside>
+      <div class="panel">
+        <h2>Laikotarpis</h2>
+        <select id="range">
+          <option value="1">Paskutinė diena</option>
+          <option value="7" selected>7 dienos</option>
+          <option value="30">30 dienų</option>
+          <option value="9999">Visa istorija</option>
+        </select>
+      </div>
+
+      <div class="panel">
+        <h2>Rodyti</h2>
+        <label class="check"><input type="checkbox" id="onlyHits" checked> Tik atitinkančius raktažodžius</label>
+        <label class="check"><input type="checkbox" id="onlyOpen"> Tik su neišpasibaigusiu terminu</label>
+        <label class="check"><input type="checkbox" id="scopeAll"> Įtraukti nestebimas savivaldybes</label>
+        <div style="margin-top:10px"><select id="sortFilter"><option value="">Visos rūšys</option></select></div>
+        <div style="margin-top:8px">
+          <select id="order">
+            <option value="score">Svarbiausi viršuje</option>
+            <option value="date">Naujausi registruoti</option>
+            <option value="due">Artimiausias terminas</option>
+            <option value="title">Pagal pavadinimą</option>
+          </select>
+        </div>
+        <div style="margin-top:8px"><input type="search" id="q" placeholder="Paieška tekste"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Papildomi raktažodžiai</h2>
+        <textarea id="kw" spellcheck="false" style="min-height:110px" placeholder="Po vieną eilutėje"></textarea>
+        <p class="hint">Pagrindinis sąrašas — repozitorijos <code>keywords.txt</code>. Čia įrašyti veikia tik šioje naršyklėje.</p>
+        <div class="row"><button class="btn" id="apply">Taikyti</button></div>
+      </div>
+
+      <div class="panel" id="tarPanel" hidden>
+        <h2>Teisės aktai</h2>
+        <label class="check"><input type="radio" name="tarSet" value="upcoming" checked> Dar neįsigalioję</label>
+        <label class="check"><input type="radio" name="tarSet" value="recent"> Naujai registruoti</label>
+        <div style="margin-top:10px">
+          <label class="check"><input type="checkbox" id="tarHits" checked> Tik atitinkančius raktažodžius</label>
+          <label class="check"><input type="checkbox" id="tarScope"> Įtraukti nestebimas savivaldybes</label>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="count" id="statBig">—<small id="statSmall">projektų</small></div>
+        <div class="row"><button class="btn ghost" id="csv">Atsisiųsti CSV</button></div>
+      </div>
+    </aside>
+
+    <main id="out"><div class="empty"><p>Kraunami duomenys…</p></div></main>
+  </div>
+
+  <footer style="margin-top:34px;padding-top:14px;border-top:1px solid var(--rule);font-size:12.5px;color:var(--muted);max-width:72ch">
+    Duomenų šaltinis <a href="https://www.lrs.lt" target="_blank" rel="noopener">www.lrs.lt</a>,
+    teikėjas Lietuvos Respublikos Seimo kanceliarija. Naudojama pagal
+    <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC&nbsp;BY&nbsp;4.0</a>
+    licenciją. Duomenys generuojami dinamiškai, todėl galimi struktūros pakeitimai.
+  </footer>
+</div>
+
+<script>
+const fold = s => (s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+const esc = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const ltDate = s => (s||"").slice(0,10).replace(/\./g,"-");
+const todayISO = new Date().toISOString().slice(0,10);
+
+let index = [], loaded = new Map(), docs = [], extraKw = [];
+let tar = null, tab = "tap";
+
+async function loadIndex(){
+  const r = await fetch("data/index.json", {cache:"no-store"});
+  if(!r.ok) throw new Error("Nerastas data/index.json — ar jau suveikė pirmasis nuskaitymas?");
+  const j = await r.json();
+  index = j.days || [];
+  document.getElementById("feedinfo").innerHTML = index.length
+    ? "Sukaupta <b>" + index.length + "</b> dienų · naujausia " + esc(index[0].date)
+    : "Duomenų dar nėra";
+}
+
+async function loadDays(n){
+  const want = index.slice(0, n).map(d=>d.date);
+  await Promise.all(want.filter(d=>!loaded.has(d)).map(async d=>{
+    const r = await fetch("data/"+d+".json", {cache:"no-store"});
+    if(r.ok) loaded.set(d, await r.json());
+  }));
+  const map = new Map();
+  for(const d of want){
+    const day = loaded.get(d);
+    if(!day) continue;
+    for(const doc of day.docs){ doc._day = d; map.set(doc.oid, doc); }
+  }
+  docs = [...map.values()];
+}
+
+function haystack(d){
+  return fold([d.title,d.sort,(d.initiators||[]).join(" "),(d.preparedBy||[]).join(" "),
+    (d.links||[]).map(l=>l.title).join(" ")].join(" "));
+}
+function allHits(d){
+  const base = d.hits || [];
+  if(!extraKw.length) return base;
+  const h = haystack(d);
+  return [...new Set(base.concat(extraKw.filter(k=>h.includes(fold(k)))))];
+}
+function highlight(text, hits){
+  if(!hits.length) return esc(text);
+  const f = fold(text), spans = [];
+  for(const k of hits){
+    const fk = fold(k); if(!fk) continue;
+    let i = f.indexOf(fk);
+    while(i!==-1){ spans.push([i,i+fk.length]); i = f.indexOf(fk,i+fk.length); }
+  }
+  if(!spans.length) return esc(text);
+  spans.sort((a,b)=>a[0]-b[0]);
+  const m=[spans[0]];
+  for(const s of spans.slice(1)){ const l=m[m.length-1]; if(s[0]<=l[1]) l[1]=Math.max(l[1],s[1]); else m.push(s); }
+  let o="",p=0;
+  for(const [a,b] of m){ o+=esc(text.slice(p,a))+"<mark>"+esc(text.slice(a,b))+"</mark>"; p=b; }
+  return o+esc(text.slice(p));
+}
+
+function currentView(){
+  const onlyHits=document.getElementById("onlyHits").checked;
+  const onlyOpen=document.getElementById("onlyOpen").checked;
+  const sortF=document.getElementById("sortFilter").value;
+  const order=document.getElementById("order").value;
+  const q=fold(document.getElementById("q").value.trim());
+
+  const scopeAll = document.getElementById("scopeAll").checked;
+  let list = docs.map(d=>({d, hits: allHits(d)}));
+  if(!scopeAll) list = list.filter(x=>x.d.scope !== false);
+  if(onlyHits) list = list.filter(x=>x.hits.length);
+  if(onlyOpen) list = list.filter(x=>x.d.nextDue);
+  if(sortF) list = list.filter(x=>x.d.sort===sortF);
+  if(q) list = list.filter(x=>haystack(x.d).includes(q));
+
+  const cmp={
+    score:(a,b)=> ((b.d.score??-1)-(a.d.score??-1)) || (b.d.regDate||"").localeCompare(a.d.regDate||""),
+    date:(a,b)=> (b.d.regDate||"").localeCompare(a.d.regDate||""),
+    due:(a,b)=> (a.d.nextDue||"9999").localeCompare(b.d.nextDue||"9999"),
+    title:(a,b)=> a.d.title.localeCompare(b.d.title,"lt")
+  }[order];
+  return list.sort(cmp);
+}
+
+function render(){
+  const out=document.getElementById("out"), view=currentView();
+  document.getElementById("statBig").innerHTML = view.length +
+    '<small>rodoma iš ' + docs.length + ' projektų</small>';
+
+  if(!view.length){
+    out.innerHTML='<div class="empty"><p>Nė vienas projektas neatitinka filtrų. Praplėskite laikotarpį arba išjunkite „Tik atitinkančius“.</p></div>';
+    return;
+  }
+
+  out.innerHTML = view.map(({d,hits})=>{
+    const due = d.nextDue ? '<span class="chip due">derinti iki '+d.nextDue+'</span>'
+              : (d.lastDue ? '<span class="chip">terminas baigėsi '+d.lastDue+'</span>' : "");
+    const last = (d.statusChain||[])[ (d.statusChain||[]).length-1 ];
+    const sc = (d.score!=null) ? '<span class="chip sc">svarba '+d.score+'</span>' : "";
+
+    return '<article class="item'+(hits.length?" hit":"")+(d.score===3?" s3":"")+'">'+
+      '<h3><a href="'+esc(d.url)+'" target="_blank" rel="noopener">'+highlight(d.title,hits)+'</a></h3>'+
+      '<div class="meta">'+
+        '<span><b>'+esc(d.sort)+'</b></span>'+
+        '<span>Nr. '+esc(d.regNo)+'</span>'+
+        '<span>registruota '+esc(d.regDate)+'</span>'+
+        ((d.initiators||[]).length?'<span>'+esc(d.initiators[0])+'</span>':"")+
+        ((d.preparedBy||[]).length?'<span>rengė '+esc(d.preparedBy[0])+'</span>':"")+
+        (d.scope===false?'<span>už stebimo rato</span>':"")+
+      '</div>'+
+      (d.why?'<p class="why">'+esc(d.why)+'</p>':"")+
+      '<div>'+sc+'<span class="chip status">'+esc(d.statusLt||d.status)+'</span>'+due+
+        hits.map(h=>'<span class="chip kw">'+esc(h)+'</span>').join("")+'</div>'+
+      (last?'<div class="strip"><span class="when">'+esc((last.from||"").slice(0,16))+'</span> — '+esc(last.op)+'</div>':"")+
+      ((d.files||[]).length?'<div class="strip files">'+d.files.slice(0,4).map(f=>
+        '<a href="'+esc(f.url)+'" target="_blank" rel="noopener">'+esc(f.kind||"Dokumentas")+'</a>').join("")+'</div>':"")+
+      ((d.coord||[]).length?'<details><summary>Derinimas: '+(d.coordCount||d.coord.length)+' institucijų</summary><ul>'+
+        d.coord.slice(0,25).map(c=>'<li>'+esc(c.by)+(c.until?" — iki "+ltDate(c.until):"")+'</li>').join("")+
+        ((d.coordCount||d.coord.length)>d.coord.length?'<li>… ir dar '+((d.coordCount||0)-d.coord.length)+'</li>':"")+'</ul></details>':"")+
+      ((d.links||[]).length?'<details><summary>Susiję dokumentai: '+d.links.length+'</summary><ul>'+
+        d.links.slice(0,25).map(l=>'<li>'+esc(l.type)+": "+
+          (l.url?'<a href="'+esc(l.url)+'" target="_blank" rel="noopener">'+esc(l.title||"atidaryti")+'</a>':esc(l.title))+'</li>').join("")+
+        (d.links.length>25?'<li>… ir dar '+(d.links.length-25)+'</li>':"")+'</ul></details>':"")+
+    '</article>';
+  }).join("");
+}
+
+async function loadTar(){
+  if(tar) return;
+  const r = await fetch("data/tar.json", {cache:"no-store"});
+  tar = r.ok ? await r.json() : {recent:[],upcoming:[],notes:["Failas data/tar.json dar nesugeneruotas."]};
+}
+
+function tarView(){
+  if(!tar) return [];
+  const set = document.querySelector('input[name=tarSet]:checked').value;
+  const onlyHits = document.getElementById("tarHits").checked;
+  const scopeAll = document.getElementById("tarScope").checked;
+  const q = fold(document.getElementById("q").value.trim());
+  let rows = (tar[set] || []).slice();
+  if(!scopeAll) rows = rows.filter(r=>r.scope !== false);
+  if(onlyHits) rows = rows.filter(r=>(r.hits||[]).length);
+  if(q) rows = rows.filter(r=>fold([r.pavadinimas,r.rusis,r.priemusi_inst,r.excerpt].join(" ")).includes(q));
+  return rows;
+}
+
+function renderTar(){
+  const out = document.getElementById("out"), rows = tarView();
+  const set = document.querySelector('input[name=tarSet]:checked').value;
+  document.getElementById("statBig").innerHTML = rows.length +
+    '<small>' + (set==="upcoming" ? "įsigalios artimiausiu metu" : "naujai registruota") + '</small>';
+
+  const notes = (tar && tar.notes || []).map(n=>'<div class="note">'+esc(n)+'</div>').join("");
+  if(!rows.length){
+    out.innerHTML = notes + '<div class="empty"><p>Nieko neatitinka. Išjunkite „Tik atitinkančius“ arba įtraukite savivaldybių aktus.</p></div>';
+    return;
+  }
+
+  out.innerHTML = notes + rows.map(r=>{
+    const hits = r.hits || [];
+    const when = set==="upcoming"
+      ? '<span class="chip due">įsigalioja ' + esc(r.isigalioja||"") + '</span>'
+      : '<span class="chip">registruota ' + esc(r.registracija||"") + '</span>';
+    return '<article class="item'+(hits.length?" hit":"")+'">'+
+      '<h3><a href="'+esc(r.nuoroda||"#")+'" target="_blank" rel="noopener">'+highlight(r.pavadinimas||"",hits)+'</a></h3>'+
+      '<div class="meta">'+
+        '<span><b>'+esc(r.rusis||"")+'</b></span>'+
+        (r.atv_dok_nr?'<span>Nr. '+esc(r.atv_dok_nr)+'</span>':"")+
+        (r.priemusi_inst?'<span>'+esc(r.priemusi_inst)+'</span>':"")+
+        (r.national===false?'<span>savivaldybės aktas</span>':"")+
+        (r.scope===false?'<span>už stebimo rato</span>':"")+
+      '</div>'+
+      (r.excerpt?'<p class="why">'+highlight(r.excerpt,hits)+'</p>':"")+
+      '<div>'+when+
+        (r.isigalioja&&set!=="upcoming"?'<span class="chip">įsigalioja '+esc(r.isigalioja)+'</span>':"")+
+        (r.negalioja?'<span class="chip">netenka galios '+esc(r.negalioja)+'</span>':"")+
+        hits.map(h=>'<span class="chip kw">'+esc(h)+'</span>').join("")+
+      '</div>'+
+    '</article>';
+  }).join("");
+}
+
+function paint(){ tab==="tap" ? render() : renderTar(); }
+
+async function switchTab(next){
+  tab = next;
+  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on", b.dataset.tab===next));
+  document.getElementById("tarPanel").hidden = next!=="tar";
+  document.querySelectorAll("aside .panel").forEach(p=>{
+    if(p.id==="tarPanel") return;
+    const keep = p.querySelector("#statBig") || p.querySelector("#q");
+    if(!keep) p.hidden = next==="tar";
+  });
+  if(next==="tar"){ await loadTar(); }
+  paint();
+}
+
+function refreshFilters(){
+  const sel=document.getElementById("sortFilter"), cur=sel.value;
+  const kinds=[...new Set(docs.map(d=>d.sort))].sort((a,b)=>a.localeCompare(b,"lt"));
+  sel.innerHTML='<option value="">Visos rūšys</option>'+
+    kinds.map(k=>'<option'+(k===cur?" selected":"")+'>'+esc(k)+'</option>').join("");
+}
+
+async function reload(){
+  await loadDays(parseInt(document.getElementById("range").value,10));
+  refreshFilters(); paint();
+}
+
+document.getElementById("range").addEventListener("change", reload);
+["onlyHits","onlyOpen","scopeAll","sortFilter","order"].forEach(id=>
+  document.getElementById(id).addEventListener("change", paint));
+["tarHits","tarScope"].forEach(id=>document.getElementById(id).addEventListener("change", paint));
+document.querySelectorAll('input[name=tarSet]').forEach(r=>r.addEventListener("change", paint));
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>switchTab(b.dataset.tab)));
+let qt; document.getElementById("q").addEventListener("input",()=>{clearTimeout(qt);qt=setTimeout(paint,180);});
+document.getElementById("apply").addEventListener("click",()=>{
+  extraKw=document.getElementById("kw").value.split("\n").map(s=>s.trim()).filter(Boolean);
+  paint();
+});
+
+document.getElementById("csv").addEventListener("click",()=>{
+  if(tab==="tar"){
+    const set=document.querySelector('input[name=tarSet]:checked').value;
+    const rr=[["Pavadinimas","Rūšis","Nr.","Priėmė","Registruota","Įsigalioja","Raktažodžiai","Nuoroda"]];
+    tarView().forEach(r=>rr.push([r.pavadinimas,r.rusis,r.atv_dok_nr,r.priemusi_inst,r.registracija,r.isigalioja,(r.hits||[]).join("; "),r.nuoroda]));
+    const c="\uFEFF"+rr.map(r=>r.map(x=>'"'+String(x??"").replace(/"/g,'""')+'"').join(";")).join("\r\n");
+    const el=document.createElement("a");
+    el.href=URL.createObjectURL(new Blob([c],{type:"text/csv;charset=utf-8"}));
+    el.download="tar-"+set+"-"+todayISO+".csv"; el.click(); URL.revokeObjectURL(el.href);
+    return;
+  }
+  const rows=[["Pavadinimas","Rūšis","Nr.","Registruota","Būsena","Iniciatorius","Derinti iki","Svarba","Kodėl","Raktažodžiai","Nuoroda"]];
+  currentView().forEach(({d,hits})=>rows.push([d.title,d.sort,d.regNo,d.regDate,d.statusLt||d.status,
+    (d.initiators||[]).join("; "),d.nextDue,d.score??"",d.why||"",hits.join("; "),d.url]));
+  const csv="\uFEFF"+rows.map(r=>r.map(c=>'"'+String(c??"").replace(/"/g,'""')+'"').join(";")).join("\r\n");
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+  a.download="tais-"+todayISO+".csv"; a.click(); URL.revokeObjectURL(a.href);
+});
+
+(async()=>{
+  try{ await loadIndex(); await reload(); }
+  catch(e){
+    document.getElementById("out").innerHTML='<div class="err">'+esc(e.message)+'</div>';
+    document.getElementById("feedinfo").textContent="Duomenų nėra";
+  }
+})();
+</script>
+</body>
+</html>

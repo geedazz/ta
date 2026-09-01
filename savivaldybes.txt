@@ -1,0 +1,25 @@
+# Stebimos savivaldybes. Savivaldybiu aktai ir projektai, neatitinkantys
+# nė vienos is siu eiluciu, pazymimi kaip uz stebejimo rato (scope=false)
+# ir suvestineje slepiami, kol neijungiamas "kitos savivaldybes".
+#
+# Nesavivaldybiniai irasai (ministerijos, Vyriausybe, Seimas) filtro nepaiso.
+# Tuscias failas = jokio ribojimo.
+
+# Miesto savivaldybes. Rajono variantai cia sazningai neitraukti:
+# pvz. "Vilniaus miesto savivaldyb" neapima Vilniaus rajono.
+Vilniaus miesto savivaldyb
+Kauno miesto savivaldyb
+Klaipėdos miesto savivaldyb
+Panevėžio miesto savivaldyb
+Šiaulių miesto savivaldyb
+Alytaus miesto savivaldyb
+
+# Sios septynios miesto savivaldybiu NETURI - egzistuoja tik kaip rajono.
+# Isbraukus zodi "rajono", ju sprendimai nebutu randami is viso.
+Biržų rajono savivaldyb
+Radviliškio rajono savivaldyb
+Tauragės rajono savivaldyb
+Šakių rajono savivaldyb
+Šilutės rajono savivaldyb
+Šilalės rajono savivaldyb
+Telšių rajono savivaldyb

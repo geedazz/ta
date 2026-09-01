@@ -1,0 +1,11 @@
+# Frazes, kurios panaikina atitikma, net jei raktazodis rastas.
+# Skirta pasikartojanciam triuksmui, ne temoms.
+#
+# Pavyzdys: savivaldybes kas savaite leidzia isakymus "del draudimo rukyti
+# daugiabucio namo balkonuose". Juose yra "daugiabu", bet teisine reiksme
+# nulis. Vieno testo metu tokie sudare 26 is 50 atitikmenu.
+dėl malonės suteikimo
+premijos skyrimo
+vienkartinės pašalpos
+valstybinės pensijos skyrimo
+apdovanojimo

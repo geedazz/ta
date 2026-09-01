@@ -1,0 +1,15 @@
+# Po viena eiluteje. Diakritika ignoruojama: "silumos" ras "silumos" ir "šilumos".
+# Rasykite saknis, ne pilnas formas.
+šilumos
+energetik
+elektros
+daugiabu
+tarif
+maksimal
+šildymo ir karšto vandens sistem
+techninės priežiūros
+administravimo tarif
+kaupiamųjų lėšų
+pastatų administravim
+bendrojo naudojimo objekt
+butų ir kitų patalpų
