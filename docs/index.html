@@ -17,14 +17,17 @@
   a{color:var(--deep)}
   button,input,textarea,select{font:inherit;color:inherit}
   .wrap{max-width:1240px;margin:0 auto;padding:28px 22px 80px}
+  .layout,.item,.meta,.strip,details ul{min-width:0}
+  .strip,details li,.meta{overflow-wrap:anywhere}
   header.top{display:flex;flex-wrap:wrap;align-items:baseline;gap:14px 22px;padding-bottom:16px;border-bottom:2px solid var(--deep);margin-bottom:22px}
   header.top h1{font-family:var(--serif);font-weight:600;font-size:27px;letter-spacing:-.01em;margin:0}
   .feedinfo{color:var(--muted);font-size:13.5px}
   .feedinfo b{color:var(--ink);font-weight:600}
   .layout{display:grid;grid-template-columns:290px 1fr;gap:30px;align-items:start}
   @media (max-width:900px){.layout{grid-template-columns:1fr}}
-  aside{position:sticky;top:20px}
-  @media (max-width:900px){aside{position:static}}
+  aside{position:sticky;top:20px;max-height:calc(100vh - 40px);overflow-y:auto;
+        scrollbar-width:thin;padding-right:2px}
+  @media (max-width:900px){aside{position:static;max-height:none;overflow:visible}}
   .panel{background:var(--card);border:1px solid var(--rule);padding:16px;margin-bottom:16px}
   .panel h2{font-size:13.5px;font-weight:600;margin:0 0 10px;color:var(--deep)}
   .hint{font-size:12.5px;color:var(--muted);margin:6px 0 0}
@@ -41,7 +44,7 @@
   .item{background:var(--card);border:1px solid var(--rule);border-left:3px solid var(--rule);padding:15px 17px;margin-bottom:11px}
   .item.hit{border-left-color:var(--deep)}
   .item.s3{border-left-width:5px}
-  .item h3{font-family:var(--serif);font-size:17.5px;font-weight:600;line-height:1.34;margin:0 0 8px;max-width:74ch}
+  .item h3{font-family:var(--serif);font-size:17.5px;font-weight:600;line-height:1.34;margin:0 0 8px;max-width:74ch;overflow-wrap:anywhere}
   .item h3 a{text-decoration:none}
   .item h3 a:hover{text-decoration:underline}
   mark{background:var(--mark);padding:0 1px}

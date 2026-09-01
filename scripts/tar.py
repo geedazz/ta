@@ -30,6 +30,8 @@ RECENT_DAYS = int(os.environ.get("TAR_RECENT_DAYS", "3"))
 # Serveris grazina puslapiais; jei pasiekiamas sis skaicius, langas per platus.
 PAGE_LIMIT = int(os.environ.get("TAR_LIMIT", "500"))
 
+_FORMAT = None
+
 # tekstas_lt vidutiniskai 7000 simboliu, todel i saraso uzklausas jo neimame.
 LIST_FIELDS = (
     "_id,pavadinimas,rusis,dok_grupe,parengusi_inst,priemusi_inst,"
@@ -43,18 +45,38 @@ HEADERS = {
 }
 
 
-def fetch(query: str):
-    url = BASE + "/:format/json?" + query
+def _get(url: str):
     req = urllib.request.Request(url, headers=HEADERS)
     with urllib.request.urlopen(req, timeout=120) as r:
-        body = json.load(r)
-    rows = body.get("_data", body if isinstance(body, list) else [])
-    truncated = len(rows) >= PAGE_LIMIT
-    return rows, truncated
+        return json.load(r)
+
+
+def fetch(query: str):
+    """Spinta formato prierasa priima ne visais budais, todel bandome kelis.
+
+    Pirmas suveikes budas isimenamas, kad likusios uzklausos jo nebeieskotu.
+    """
+    global _FORMAT
+    candidates = [_FORMAT] if _FORMAT else ["/:format/json?", "?format(json)&", "?"]
+    last = None
+    for mode in candidates:
+        url = BASE + mode + query
+        try:
+            body = _get(url)
+        except Exception as exc:  # noqa: BLE001
+            last = f"{exc}  ties  {url}"
+            continue
+        _FORMAT = mode
+        rows = body.get("_data", body if isinstance(body, list) else [])
+        return rows, len(rows) >= PAGE_LIMIT
+    raise RuntimeError(last or "nepavyko nuskaityti")
 
 
 def q(*parts) -> str:
-    return "&".join(urllib.parse.quote(p, safe="()<>=\"',-_.") for p in parts)
+    # Kableliai select() sarase ir dvitaskiai privalo likti neuzkoduoti:
+    # %2C Spinta grazina HTTP 500.
+    safe = "()<>=\"',-_.:/*"
+    return "&".join(urllib.parse.quote(p, safe=safe) for p in parts)
 
 
 def scope_of(row, municipalities) -> bool:
@@ -79,11 +101,9 @@ def title_hits(row, keywords, excludes=()):
 
 def fetch_text(doc_id: str) -> str:
     """Vieno akto pilnas tekstas. Naudojamas tik neisigaliojusiems."""
-    url = BASE + "/" + doc_id + "/:format/json?" + q("select(tekstas_lt)")
-    req = urllib.request.Request(url, headers=HEADERS)
+    url = BASE + "/" + doc_id + (_FORMAT or "/:format/json?") + q("select(tekstas_lt)")
     try:
-        with urllib.request.urlopen(req, timeout=90) as r:
-            body = json.load(r)
+        body = _get(url)
     except Exception:  # noqa: BLE001
         return ""
     if isinstance(body, dict) and "tekstas_lt" in body:
@@ -203,4 +223,5 @@ if __name__ == "__main__":
     except Exception as exc:  # noqa: BLE001
         # TAR sutrikimas neturi sugriauti projektu stebesenos.
         print("TAR klaida (praleidziama):", exc, file=sys.stderr)
+        print("  Uzklausos pavyzdys naudotas:", BASE, file=sys.stderr)
         sys.exit(0)
