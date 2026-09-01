@@ -155,30 +155,48 @@ def main():
     tomorrow = (today + timedelta(days=1)).isoformat()
     notes = []
 
-    # 1. Naujai paskelbti. Naudojame paskelbta_tar, o ne registracija:
-    #    pastaroji daugelyje irasu tuscia, o paskelbimas TAR yra oficialaus
-    #    paskelbimo momentas, nuo kurio skaiciuojami terminai.
-    recent, cut = fetch(q(
-        f'paskelbta_tar>="{since}"',
-        "sort(-paskelbta_tar)",
-        f"select({LIST_FIELDS})",
-        f"limit({PAGE_LIMIT})",
-    ))
-    if cut:
-        notes.append(f"Naujai paskelbtu sarasas nukirstas ties {PAGE_LIMIT}; sumazinkite TAR_RECENT_DAYS.")
-    if not recent:
-        notes.append(f"Nuo {since} naujai paskelbtu nerasta - gali buti, kad rinkinys veluoja "
-                     f"labiau nei {RECENT_DAYS} d. Padidinkite TAR_RECENT_DAYS.")
+    # Kiekvienas pjuvis atskirai. Vienas nulutes, kitas privalo isliktis.
+    #
+    # Neisigalioje atrenka kelias desimtis irasu ir veikia patikimai.
+    # Naujai paskelbti gali apimti tukstancius, ir serveris tada grazina 500,
+    # todel bandome siaurinti langa, o nepavykus - praleidziame.
+    upcoming, cut = [], False
+    try:
+        upcoming, cut = fetch(q(
+            f'isigalioja>="{tomorrow}"',
+            "sort(isigalioja)",
+            f"select({LIST_FIELDS})",
+            f"limit({PAGE_LIMIT})",
+        ))
+        if cut:
+            notes.append(f"Neisigaliojusiu sarasas nukirstas ties {PAGE_LIMIT}.")
+    except Exception as exc:  # noqa: BLE001
+        notes.append(f"Neisigaliojusiu pjuvio nepavyko nuskaityti: {exc}")
+        print("  ! neisigalioje:", exc, file=sys.stderr)
 
-    # 2. Priimti, bet dar neisigalioje.
-    upcoming, cut = fetch(q(
-        f'isigalioja>="{tomorrow}"',
-        "sort(isigalioja)",
-        f"select({LIST_FIELDS})",
-        f"limit({PAGE_LIMIT})",
-    ))
-    if cut:
-        notes.append(f"Neisigaliojusiu sarasas nukirstas ties {PAGE_LIMIT}.")
+    # Naudojame paskelbta_tar, o ne registracija: pastaroji senesniuose
+    # irasuose tuscia, o paskelbimas TAR yra oficialaus paskelbimo momentas.
+    recent = []
+    for days in (RECENT_DAYS, 7, 3):
+        since = (today - timedelta(days=days)).isoformat()
+        try:
+            recent, cut = fetch(q(
+                f'paskelbta_tar>="{since}"',
+                "sort(-paskelbta_tar)",
+                f"select({LIST_FIELDS})",
+                f"limit({PAGE_LIMIT})",
+            ))
+        except Exception as exc:  # noqa: BLE001
+            print(f"  ! {days} d. langas nepavyko: {exc}", file=sys.stderr)
+            continue
+        if cut:
+            notes.append(f"Naujai paskelbtu sarasas nukirstas ties {PAGE_LIMIT} ({days} d. langas).")
+        break
+    else:
+        notes.append("Naujai paskelbtu pjuvio nuskaityti nepavyko; rodomi tik neisigalioje.")
+
+    if not recent and not notes:
+        notes.append(f"Nuo {since} naujai paskelbtu nerasta - rinkinys gali veluoti labiau.")
 
     for row in recent:
         row["hits"] = title_hits(row, keywords, excludes)
