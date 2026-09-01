@@ -121,7 +121,7 @@
       <div class="panel" id="tarPanel" hidden>
         <h2>Teisės aktai</h2>
         <label class="check"><input type="radio" name="tarSet" value="upcoming" checked> Dar neįsigalioję</label>
-        <label class="check"><input type="radio" name="tarSet" value="recent"> Naujai registruoti</label>
+        <label class="check"><input type="radio" name="tarSet" value="recent"> Naujai paskelbti</label>
         <div style="margin-top:10px">
           <label class="check"><input type="checkbox" id="tarHits" checked> Tik atitinkančius raktažodžius</label>
           <label class="check"><input type="checkbox" id="tarScope"> Įtraukti nestebimas savivaldybes</label>
@@ -296,7 +296,7 @@ function renderTar(){
   const out = document.getElementById("out"), rows = tarView();
   const set = document.querySelector('input[name=tarSet]:checked').value;
   document.getElementById("statBig").innerHTML = rows.length +
-    '<small>' + (set==="upcoming" ? "įsigalios artimiausiu metu" : "naujai registruota") + '</small>';
+    '<small>' + (set==="upcoming" ? "įsigalios artimiausiu metu" : "naujai paskelbta") + '</small>';
 
   const notes = (tar && tar.notes || []).map(n=>'<div class="note">'+esc(n)+'</div>').join("");
   if(!rows.length){
@@ -308,7 +308,7 @@ function renderTar(){
     const hits = r.hits || [];
     const when = set==="upcoming"
       ? '<span class="chip due">įsigalioja ' + esc(r.isigalioja||"") + '</span>'
-      : '<span class="chip">registruota ' + esc(r.registracija||"") + '</span>';
+      : '<span class="chip">paskelbta ' + esc(r.paskelbta_tar||"") + '</span>';
     return '<article class="item'+(hits.length?" hit":"")+'">'+
       '<h3><a href="'+esc(r.nuoroda||"#")+'" target="_blank" rel="noopener">'+highlight(r.pavadinimas||"",hits)+'</a></h3>'+
       '<div class="meta">'+

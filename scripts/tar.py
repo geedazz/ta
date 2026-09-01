@@ -25,18 +25,25 @@ BASE = "https://get.data.gov.lt/datasets/gov/lrsk/teises_aktai/Dokumentas"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "docs", "data", "tar.json")
 
-# Kiek dienu atgal ziurime naujai uzregistruotus aktus.
-RECENT_DAYS = int(os.environ.get("TAR_RECENT_DAYS", "3"))
+# Kiek dienu atgal ziurime naujai paskelbtus aktus.
+#
+# Atviru duomenu rinkinys veluoja kelias dienas: 2026-09-01 naujausi irasai
+# buvo 2026-08-28. Todel langas turi buti platesnis uz veluojima, kitaip
+# uzklausa grazina "No data". Kartojimosi nera - suvestine lygina pagal _id.
+RECENT_DAYS = int(os.environ.get("TAR_RECENT_DAYS", "14"))
 # Serveris grazina puslapiais; jei pasiekiamas sis skaicius, langas per platus.
 PAGE_LIMIT = int(os.environ.get("TAR_LIMIT", "100"))
 
 _FORMAT = None
 
 # tekstas_lt vidutiniskai 7000 simboliu, todel i saraso uzklausas jo neimame.
+#
+# Sarasas trumpas sazingai: kiekvienas laukas atskirai veikia, bet visi
+# sesiolika kartu su filtru grazina HTTP 500. Palikti tik tie, kurie
+# tikrai naudojami suvestineje.
 LIST_FIELDS = (
-    "_id,pavadinimas,rusis,dok_grupe,parengusi_inst,priemusi_inst,"
-    "tar_kodas,atv_dok_nr,nuoroda,registracija,priimtas,paskelbta_tar,"
-    "isigalioja,negalioja,galioj_busena,ar_nacionalinis,ar_verslo_reg"
+    "_id,pavadinimas,rusis,priemusi_inst,atv_dok_nr,nuoroda,"
+    "paskelbta_tar,isigalioja,galioj_busena,ar_nacionalinis"
 )
 
 HEADERS = {
@@ -148,16 +155,20 @@ def main():
     tomorrow = (today + timedelta(days=1)).isoformat()
     notes = []
 
-    # 1. Naujai uzregistruoti. Filtras butinas: be jo mazejantis rikiavimas
-    #    isstumia i prieki irasus su tuscia registracijos data.
+    # 1. Naujai paskelbti. Naudojame paskelbta_tar, o ne registracija:
+    #    pastaroji daugelyje irasu tuscia, o paskelbimas TAR yra oficialaus
+    #    paskelbimo momentas, nuo kurio skaiciuojami terminai.
     recent, cut = fetch(q(
-        f'registracija>="{since}"',
-        "sort(-registracija)",
+        f'paskelbta_tar>="{since}"',
+        "sort(-paskelbta_tar)",
         f"select({LIST_FIELDS})",
         f"limit({PAGE_LIMIT})",
     ))
     if cut:
-        notes.append(f"Naujai registruotu sarasas nukirstas ties {PAGE_LIMIT}; sumazinkite TAR_RECENT_DAYS.")
+        notes.append(f"Naujai paskelbtu sarasas nukirstas ties {PAGE_LIMIT}; sumazinkite TAR_RECENT_DAYS.")
+    if not recent:
+        notes.append(f"Nuo {since} naujai paskelbtu nerasta - gali buti, kad rinkinys veluoja "
+                     f"labiau nei {RECENT_DAYS} d. Padidinkite TAR_RECENT_DAYS.")
 
     # 2. Priimti, bet dar neisigalioje.
     upcoming, cut = fetch(q(
@@ -200,6 +211,7 @@ def main():
         "source": "www.lrs.lt / Seimo kanceliarija, rinkinys od000139, CC BY 4.0",
         "updated": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "recentSince": since,
+        "recentField": "paskelbta_tar",
         "notes": notes,
         "recent": [clean(r) for r in recent],
         "upcoming": [clean(r) for r in upcoming],
@@ -210,7 +222,8 @@ def main():
         json.dump(payload, f, ensure_ascii=False, separators=(",", ":"))
 
     inscope = [r for r in recent + upcoming if r.get("scope") and r.get("hits")]
-    print(f"TAR: {len(recent)} naujai registruotu (nuo {since}), "
+    newest = max((r.get("paskelbta_tar") or "")[:10] for r in recent) if recent else "-"
+    print(f"TAR: {len(recent)} naujai paskelbtu (nuo {since}, naujausias {newest}), "
           f"{len(upcoming)} dar neisigaliojusiu, "
           f"{len(inscope)} atitinka raktazodzius stebimame rate")
     for n in notes:
