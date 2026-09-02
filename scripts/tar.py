@@ -31,12 +31,18 @@ PROXY = os.environ.get("TAR_PROXY_URL", "").rstrip("/")
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "docs", "data", "tar.json")
 
-# Kiek dienu atgal ziurime naujai paskelbtus aktus.
+# Du atskiri dalykai, dazniausiai supainiojami:
 #
-# Atviru duomenu rinkinys veluoja kelias dienas: 2026-09-01 naujausi irasai
-# buvo 2026-08-28. Todel langas turi buti platesnis uz veluojima, kitaip
-# uzklausa grazina "No data". Kartojimosi nera - suvestine lygina pagal _id.
-RECENT_DAYS = int(os.environ.get("TAR_RECENT_DAYS", "14"))
+# QUERY_DAYS - kiek atgal KLAUSIAME serverio. Turi buti platus, nes
+# rinkinys veluoja kelias dienas (2026-09-01 naujausias irasas buvo
+# 2026-08-28 - 4 dienu veluojimas). Per siauras langas grazina "No data".
+#
+# FRESH_DAYS - kiek atgal RODOME suvestineje. Vartotojui rupi tik
+# siandien/vakar priimti aktai, ne visa 10 dienu istorija. Sis filtras
+# taikomas JAU gautiems duomenims, klientine puse - serverio uzklausai
+# neturi jokios itakos ir nesumazina "No data" rizikos.
+QUERY_DAYS = int(os.environ.get("TAR_QUERY_DAYS", "10"))
+FRESH_DAYS = int(os.environ.get("TAR_FRESH_DAYS", "1"))  # 1 = siandien + vakar
 # Serveris grazina puslapiais; jei pasiekiamas sis skaicius, langas per platus.
 PAGE_LIMIT = int(os.environ.get("TAR_LIMIT", "100"))
 
@@ -199,7 +205,7 @@ def main():
     excludes = load_list("exclude.txt")
     municipalities = load_list("savivaldybes.txt")
     today = date.today()
-    since = (today - timedelta(days=RECENT_DAYS)).isoformat()
+    since = (today - timedelta(days=QUERY_DAYS)).isoformat()
     tomorrow = (today + timedelta(days=1)).isoformat()
     notes = []
 
@@ -216,7 +222,7 @@ def main():
     # paskelbtu sarasa, o ne tuscia puslapi.
 
     recent = []
-    for days in (RECENT_DAYS, 7, 3):
+    for days in (QUERY_DAYS, 14, 5):
         since = (today - timedelta(days=days)).isoformat()
         try:
             recent, cut = fetch(q(
@@ -253,6 +259,14 @@ def main():
             "nestabili. Naujai paskelbtu sarasas veliau."
         )
         print("  ! neisigalioje:", exc, file=sys.stderr)
+
+    # Filtruojame iki tikrai svieziu - serveriui uzklausem platesnio lango
+    # del veluojimo, bet rodyti norime tik pastarasias FRESH_DAYS dienas.
+    fresh_since = (today - timedelta(days=FRESH_DAYS)).isoformat()
+    older = [r for r in recent if (r.get("paskelbta_tar") or "")[:10] < fresh_since]
+    recent = [r for r in recent if (r.get("paskelbta_tar") or "")[:10] >= fresh_since]
+    if older:
+        print(f"  (atmesta {len(older)} senesniu nei {FRESH_DAYS} d. - rodomi tik svieziausi)")
 
     for row in recent:
         row["hits"] = title_hits(row, keywords, excludes)
