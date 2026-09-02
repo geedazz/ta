@@ -2,9 +2,12 @@ name: TAIS dienos srautas
 
 on:
   schedule:
-    - cron: "15 11 * * *"
-    - cron: "15 16 * * *"
-    - cron: "15 20 * * *"
+    # Srautas generuojamas dinamiskai ir kaupia einamaja diena, todel
+    # svarbiausias yra paskutinis paleidimas pries vidurnakti Vilniuje.
+    # Ankstesni paleidimai - apsauga, jei vakarinis nulustu.
+    - cron: "15 11 * * *"   # ~14:15 Vilniaus laiku
+    - cron: "15 16 * * *"   # ~19:15
+    - cron: "15 20 * * *"   # ~23:15, pilna diena
   workflow_dispatch:
 
 permissions:
@@ -29,6 +32,8 @@ jobs:
 
       - name: Nuskaityti teises aktu registra
         continue-on-error: true
+        env:
+          TAR_PROXY_URL: ${{ secrets.TAR_PROXY_URL }}
         run: python scripts/tar.py
 
       - name: Ivertinti su Claude
