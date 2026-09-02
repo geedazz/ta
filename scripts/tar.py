@@ -92,7 +92,7 @@ def _get(url: str):
         raise RuntimeError(f"{exc.code} {exc.reason} | serveris atsake: {body[:400]}") from None
 
 
-def fetch(query: str, attempts: int = 3):
+def fetch(query: str, attempts: int = 5):
     """Spinta formato prierasa priima ne visais budais, todel bandome kelis.
 
     Pirmas suveikes budas isimenamas, kad likusios uzklausos jo nebeieskotu.
@@ -111,7 +111,9 @@ def fetch(query: str, attempts: int = 3):
             except Exception as exc:  # noqa: BLE001
                 last = f"{exc}  ties  {url}"
                 if attempt < attempts:
-                    time.sleep(2 * attempt)
+                    # 3s, 6s, 12s, 24s - saugykla nestabili, ne blokuojanti
+                    # nuolat, todel platesnis langas duoda geresne tikimybe.
+                    time.sleep(3 * (2 ** (attempt - 1)))
                 continue
             _FORMAT = mode
             rows = body.get("_data", body if isinstance(body, list) else [])
