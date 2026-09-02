@@ -203,27 +203,18 @@ def main():
     tomorrow = (today + timedelta(days=1)).isoformat()
     notes = []
 
-    # Kiekvienas pjuvis atskirai. Vienas nulutes, kitas privalo isliktis.
+    # Kiekvienas pjuvis bandomas atskirai, patikimiausias pirma.
     #
-    # Neisigalioje atrenka kelias desimtis irasu ir veikia patikimai.
-    # Naujai paskelbti gali apimti tukstancius, ir serveris tada grazina 500,
-    # todel bandome siaurinti langa, o nepavykus - praleidziame.
-    upcoming, cut = [], False
-    try:
-        upcoming, cut = fetch(q(
-            f'isigalioja>="{tomorrow}"',
-            "sort(isigalioja)",
-            f"select({LIST_FIELDS})",
-            f"limit({PAGE_LIMIT})",
-        ))
-        if cut:
-            notes.append(f"Neisigaliojusiu sarasas nukirstas ties {PAGE_LIMIT}.")
-    except Exception as exc:  # noqa: BLE001
-        notes.append(f"Neisigaliojusiu pjuvio nepavyko nuskaityti: {exc}")
-        print("  ! neisigalioje:", exc, file=sys.stderr)
+    # Bandymai parode, kad "priimtas" ir "paskelbta_tar" filtrai patikimai
+    # suveikia, o "isigalioja" (ateities data) nuosekliai nepavyksta - net
+    # su pakartojimais, net per proxy. Tikriausia priezastis: tas laukas
+    # rasto blogiau indeksuotas, nes dauguma uzklausu einta atgal, ne pirmyn.
+    #
+    # Todel tvarka: pirma paskelbta_tar (patikimas), tada isigalioja
+    # (nepatikimas, bet unikalus - tik jis parodo, kas jau priimta bet dar
+    # neveikia). Jei isigalioja nepavyksta, suvestine vis tiek turi naujai
+    # paskelbtu sarasa, o ne tuscia puslapi.
 
-    # Naudojame paskelbta_tar, o ne registracija: pastaroji senesniuose
-    # irasuose tuscia, o paskelbimas TAR yra oficialaus paskelbimo momentas.
     recent = []
     for days in (RECENT_DAYS, 7, 3):
         since = (today - timedelta(days=days)).isoformat()
@@ -241,10 +232,27 @@ def main():
             notes.append(f"Naujai paskelbtu sarasas nukirstas ties {PAGE_LIMIT} ({days} d. langas).")
         break
     else:
-        notes.append("Naujai paskelbtu pjuvio nuskaityti nepavyko; rodomi tik neisigalioje.")
+        notes.append("Naujai paskelbtu pjuvio nuskaityti nepavyko.")
 
     if not recent and not notes:
         notes.append(f"Nuo {since} naujai paskelbtu nerasta - rinkinys gali veluoti labiau.")
+
+    upcoming, cut = [], False
+    try:
+        upcoming, cut = fetch(q(
+            f'isigalioja>="{tomorrow}"',
+            "sort(isigalioja)",
+            f"select({LIST_FIELDS})",
+            f"limit({PAGE_LIMIT})",
+        ))
+        if cut:
+            notes.append(f"Neisigaliojusiu sarasas nukirstas ties {PAGE_LIMIT}.")
+    except Exception as exc:  # noqa: BLE001
+        notes.append(
+            "Neisigaliojusiu pjuvio siandien nuskaityti nepavyko - saugykla "
+            "nestabili. Naujai paskelbtu sarasas veliau."
+        )
+        print("  ! neisigalioje:", exc, file=sys.stderr)
 
     for row in recent:
         row["hits"] = title_hits(row, keywords, excludes)
