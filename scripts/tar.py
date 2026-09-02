@@ -15,6 +15,7 @@ per https://get.data.gov.lt (Spinta API).
 import json
 import os
 import sys
+import time
 import urllib.parse
 import urllib.error
 import urllib.request
@@ -91,24 +92,30 @@ def _get(url: str):
         raise RuntimeError(f"{exc.code} {exc.reason} | serveris atsake: {body[:400]}") from None
 
 
-def fetch(query: str):
+def fetch(query: str, attempts: int = 3):
     """Spinta formato prierasa priima ne visais budais, todel bandome kelis.
 
     Pirmas suveikes budas isimenamas, kad likusios uzklausos jo nebeieskotu.
+    Klaidos dazniausiai laikinos (saugykla ispeja apie aktyvu vystyma, ne
+    stabilu IP bloka - ta pati uzklausa kartais praeina, kartais ne), todel
+    kiekviena uzklausa kartojame kelis kartus su trumpa pauze pries pasiduodant.
     """
     global _FORMAT
     candidates = [_FORMAT] if _FORMAT else ["/:format/json?", "?format(json)&"]
     last = None
     for mode in candidates:
         url = BASE + mode + query
-        try:
-            body = _get(url)
-        except Exception as exc:  # noqa: BLE001
-            last = f"{exc}  ties  {url}"
-            continue
-        _FORMAT = mode
-        rows = body.get("_data", body if isinstance(body, list) else [])
-        return rows, len(rows) >= PAGE_LIMIT
+        for attempt in range(1, attempts + 1):
+            try:
+                body = _get(url)
+            except Exception as exc:  # noqa: BLE001
+                last = f"{exc}  ties  {url}"
+                if attempt < attempts:
+                    time.sleep(2 * attempt)
+                continue
+            _FORMAT = mode
+            rows = body.get("_data", body if isinstance(body, list) else [])
+            return rows, len(rows) >= PAGE_LIMIT
     raise RuntimeError(last or "nepavyko nuskaityti")
 
 
