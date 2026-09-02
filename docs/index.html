@@ -3,88 +3,143 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TAIS projektų stebėsena</title>
+<title>Teisėkūros stebėsena</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --paper:#F3F4F1; --card:#FFFFFF; --ink:#191D1B; --muted:#6A716D;
-    --rule:#D8DBD5; --deep:#12403A; --mark:#FFE9A8; --warn:#9A4B12;
-    --sans: ui-sans-serif,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --surface:#F5F6F8;
+    --paper:#FFFFFF;
+    --ink:#15181D;
+    --muted:#626B78;
+    --faint:#8C95A1;
+    --line:#E2E5EA;
+    --accent:#1B3A6B;
+    --accent-soft:#EAEFF7;
+    --urgent:#A6371F;
+    --sans:"IBM Plex Sans", ui-sans-serif, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --rail:76px;
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
-  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
-  a{color:var(--deep)}
+  body{
+    background:var(--surface); color:var(--ink);
+    font-family:var(--sans); font-size:15px; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    font-variant-numeric:tabular-nums;
+  }
+  a{color:var(--accent)}
   button,input,textarea,select{font:inherit;color:inherit}
-  .wrap{max-width:1240px;margin:0 auto;padding:28px 22px 80px}
-  .layout,.item,.meta,.strip,details ul{min-width:0}
-  .strip,details li,.meta{overflow-wrap:anywhere}
-  header.top{display:flex;flex-wrap:wrap;align-items:baseline;gap:14px 22px;padding-bottom:16px;border-bottom:2px solid var(--deep);margin-bottom:22px}
-  header.top h1{font-family:var(--serif);font-weight:600;font-size:27px;letter-spacing:-.01em;margin:0}
-  .feedinfo{color:var(--muted);font-size:13.5px}
-  .feedinfo b{color:var(--ink);font-weight:600}
-  .layout{display:grid;grid-template-columns:290px 1fr;gap:30px;align-items:start}
-  @media (max-width:900px){.layout{grid-template-columns:1fr}}
-  aside{position:sticky;top:20px;max-height:calc(100vh - 40px);overflow-y:auto;
-        scrollbar-width:thin;padding-right:2px}
-  @media (max-width:900px){aside{position:static;max-height:none;overflow:visible}}
-  .panel{background:var(--card);border:1px solid var(--rule);padding:16px;margin-bottom:16px}
-  .panel h2{font-size:13.5px;font-weight:600;margin:0 0 10px;color:var(--deep)}
-  .hint{font-size:12.5px;color:var(--muted);margin:6px 0 0}
-  textarea{width:100%;min-height:150px;resize:vertical;border:1px solid var(--rule);padding:9px 10px;font-size:13.5px;line-height:1.45;background:#FCFCFB}
-  textarea:focus,input:focus,select:focus,button:focus-visible{outline:2px solid var(--deep);outline-offset:1px}
-  .btn{background:var(--deep);color:#fff;border:0;padding:8px 14px;cursor:pointer;font-size:13.5px;font-weight:500}
-  .btn.ghost{background:transparent;color:var(--deep);border:1px solid var(--rule)}
-  .btn:hover{opacity:.88}
-  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
-  label.check{display:flex;gap:7px;align-items:center;font-size:13.5px;cursor:pointer;margin-bottom:5px}
-  select,input[type=search]{border:1px solid var(--rule);padding:7px 9px;background:#FCFCFB;width:100%}
-  .count{font-family:var(--serif);font-size:34px;line-height:1;font-weight:600}
-  .count small{font-family:var(--sans);font-size:13px;font-weight:400;color:var(--muted);display:block;margin-top:5px}
-  .item{background:var(--card);border:1px solid var(--rule);border-left:3px solid var(--rule);padding:15px 17px;margin-bottom:11px}
-  .item.hit{border-left-color:var(--deep)}
-  .item.s3{border-left-width:5px}
-  .item h3{font-family:var(--serif);font-size:17.5px;font-weight:600;line-height:1.34;margin:0 0 8px;max-width:74ch;overflow-wrap:anywhere}
-  .item h3 a{text-decoration:none}
-  .item h3 a:hover{text-decoration:underline}
-  mark{background:var(--mark);padding:0 1px}
-  .meta{font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 14px;margin-bottom:9px}
-  .meta b{color:var(--ink);font-weight:600}
-  .chip{display:inline-block;font-size:11.5px;padding:2px 8px;border:1px solid var(--rule);background:#F7F8F6;color:var(--muted);margin:0 6px 6px 0}
-  .chip.kw{background:var(--mark);border-color:#E4C86B;color:#4A3A08}
-  .chip.due{background:#FBF0E4;border-color:#E0BE95;color:var(--warn);font-weight:600}
-  .chip.status{background:#EDF3F0;border-color:#BFD4CA;color:var(--deep)}
-  .chip.sc{background:var(--deep);border-color:var(--deep);color:#fff;font-weight:600}
-  .why{font-size:13.5px;color:var(--ink);background:#F7F9F7;border-left:2px solid var(--deep);padding:7px 11px;margin:2px 0 9px;max-width:70ch}
-  .strip{border-top:1px solid var(--rule);margin-top:10px;padding-top:9px;font-size:12.8px;color:var(--muted)}
-  .strip .when{color:var(--ink);font-variant-numeric:tabular-nums}
-  .files a{margin-right:12px;font-size:12.8px}
-  .tab{background:transparent;border:1px solid var(--rule);border-right:0;padding:6px 15px;cursor:pointer;font-size:13.5px;color:var(--muted)}
-  .tab:last-child{border-right:1px solid var(--rule)}
-  .tab.on{background:var(--deep);border-color:var(--deep);color:#fff;font-weight:500}
-  .note{font-size:12.5px;color:var(--warn);background:#FBF0E4;border:1px solid #E0BE95;padding:8px 11px;margin-bottom:12px}
-  .empty{padding:56px 20px;text-align:center;color:var(--muted);background:var(--card);border:1px solid var(--rule)}
-  .empty p{max-width:46ch;margin:0 auto}
-  .err{background:#FBEEE8;border:1px solid #E0BE95;color:var(--warn);padding:11px 13px;font-size:13.5px;margin-bottom:14px}
-  details summary{cursor:pointer;font-size:12.8px;color:var(--deep);margin-top:8px}
-  details ul{margin:7px 0 0;padding-left:18px;font-size:12.8px;color:var(--muted)}
-  details li{margin-bottom:3px}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px 72px}
+
+  .bar{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding:18px 0 14px}
+  .bar h1{font-size:16px;font-weight:600;letter-spacing:-.005em;margin:0}
+  .stamp{font-size:13px;color:var(--muted)}
+  .stamp b{color:var(--ink);font-weight:500}
+  .switch{margin-left:auto;display:flex;background:var(--paper);border:1px solid var(--line);border-radius:7px;padding:2px}
+  .switch button{border:0;background:transparent;color:var(--muted);padding:6px 14px;font-size:13.5px;font-weight:500;border-radius:5px;cursor:pointer}
+  .switch button.on{background:var(--accent);color:#fff}
+
+  .next{
+    display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
+    padding:14px 18px;margin-bottom:18px;
+    background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--urgent);border-radius:6px;
+  }
+  .next .count{font-size:30px;font-weight:600;line-height:1;color:var(--urgent)}
+  .next .what{font-size:14px;color:var(--muted);max-width:70ch}
+  .next .what a{color:var(--ink);text-decoration:none;font-weight:500}
+  .next .what a:hover{text-decoration:underline}
+
+  .grid{display:grid;grid-template-columns:212px 1fr;gap:28px;align-items:start}
+  @media (max-width:880px){.grid{grid-template-columns:1fr}}
+  aside{position:sticky;top:16px;max-height:calc(100vh - 32px);overflow-y:auto;scrollbar-width:thin}
+  @media (max-width:880px){aside{position:static;max-height:none;overflow:visible}}
+
+  .fset{margin-bottom:22px}
+  .fset h2{font-size:12.5px;font-weight:600;color:var(--faint);margin:0 0 9px}
+  label.ck{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;cursor:pointer;margin-bottom:7px;line-height:1.35}
+  label.ck input{margin:2px 0 0}
+  select,input[type=search],textarea{
+    width:100%;border:1px solid var(--line);border-radius:5px;
+    padding:7px 9px;background:var(--paper);font-size:13.5px;
+  }
+  select{margin-bottom:8px}
+  textarea{min-height:84px;resize:vertical;line-height:1.45}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+  .btn{background:var(--accent);color:#fff;border:0;border-radius:5px;padding:7px 13px;font-size:13.5px;font-weight:500;cursor:pointer;margin-top:8px}
+  .btn.quiet{background:transparent;color:var(--accent);border:1px solid var(--line)}
+  .btn:hover{opacity:.9}
+  .hint{font-size:12px;color:var(--faint);margin:7px 0 0;line-height:1.4}
+  .tally{font-size:13.5px;color:var(--muted);margin:0}
+  .tally b{font-size:22px;font-weight:600;color:var(--ink);display:block;line-height:1.1;margin-bottom:2px}
+
+  .row{
+    display:grid;grid-template-columns:var(--rail) 1fr;gap:16px;
+    background:var(--paper);border:1px solid var(--line);border-left:3px solid transparent;
+    border-radius:6px;padding:13px 16px;margin-bottom:8px;
+  }
+  .row.u1{border-left-color:var(--urgent)}
+  .row.u2{border-left-color:rgba(166,55,31,.45)}
+  .row.u3{border-left-color:rgba(166,55,31,.15)}
+  @media (max-width:560px){.row{grid-template-columns:1fr;gap:8px}}
+
+  .clock{text-align:right;padding-top:1px}
+  @media (max-width:560px){.clock{text-align:left}}
+  .clock .d{font-size:23px;font-weight:600;line-height:1;color:var(--ink)}
+  .clock .d.past{color:var(--faint);font-weight:400}
+  .clock .lbl{font-size:11.5px;color:var(--faint);margin-top:3px}
+  .clock .when{font-size:11.5px;color:var(--faint);margin-top:5px;white-space:nowrap}
+  .clock .plain{font-size:12.5px;color:var(--faint);line-height:1.35}
+
+  .row h3{font-size:15.5px;font-weight:600;line-height:1.38;margin:0 0 5px;max-width:78ch;overflow-wrap:anywhere}
+  .row h3 a{color:var(--ink);text-decoration:none}
+  .row h3 a:hover{color:var(--accent);text-decoration:underline}
+  mark{background:none;color:var(--accent);font-weight:600;padding:0}
+
+  .meta{display:flex;flex-wrap:wrap;gap:3px 12px;font-size:12.5px;color:var(--muted);margin-bottom:6px}
+  .meta .k{color:var(--ink);font-weight:500}
+  .tag{
+    display:inline-block;font-size:11.5px;line-height:1.6;color:var(--accent);
+    border:1px solid var(--accent-soft);background:var(--accent-soft);
+    border-radius:3px;padding:1px 7px;margin:0 5px 4px 0;
+  }
+  .tag.state{color:var(--muted);background:transparent;border-color:var(--line)}
+  .quote{font-size:13px;color:var(--muted);line-height:1.5;border-left:2px solid var(--line);padding:2px 0 2px 11px;margin:7px 0;max-width:74ch}
+  .files{margin-top:7px;font-size:12.5px}
+  .files a{margin-right:14px}
+  details{margin-top:6px}
+  details summary{cursor:pointer;font-size:12.5px;color:var(--muted)}
+  details summary:hover{color:var(--accent)}
+  details ul{margin:6px 0 0;padding-left:17px;font-size:12.5px;color:var(--muted)}
+  details li{margin-bottom:2px;overflow-wrap:anywhere}
+
+  .flag{background:var(--paper);border:1px solid var(--line);border-left:3px solid #C8922B;border-radius:6px;padding:10px 14px;font-size:13px;color:var(--muted);margin-bottom:8px}
+  .blank{background:var(--paper);border:1px dashed var(--line);border-radius:6px;padding:44px 24px;text-align:center;color:var(--muted);font-size:14px}
+  .blank p{max-width:44ch;margin:0 auto;line-height:1.55}
+
+  footer{margin-top:36px;padding-top:14px;border-top:1px solid var(--line);font-size:12px;color:var(--faint);max-width:76ch;line-height:1.55}
+  #list{transition:opacity .12s ease}
+  @media (prefers-reduced-motion:reduce){#list{transition:none}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header class="top">
-    <h1>TAIS projektų stebėsena</h1>
-    <div class="feedinfo" id="feedinfo">Kraunama…</div>
-    <nav class="tabs" style="flex:1 0 auto;display:flex;gap:0;justify-content:flex-end">
-      <button class="tab on" data-tab="tap">Projektai</button>
-      <button class="tab" data-tab="tar">Teisės aktai</button>
+
+  <header class="bar">
+    <h1>Teisėkūros stebėsena</h1>
+    <span class="stamp" id="stamp">Kraunama</span>
+    <nav class="switch">
+      <button class="on" data-tab="tap">Projektai</button>
+      <button data-tab="tar">Teisės aktai</button>
     </nav>
   </header>
 
-  <div class="layout">
+  <div id="hero"></div>
+
+  <div class="grid">
     <aside>
-      <div class="panel">
+      <div class="fset" id="fsRange">
         <h2>Laikotarpis</h2>
         <select id="range">
           <option value="1">Paskutinė diena</option>
@@ -94,54 +149,54 @@
         </select>
       </div>
 
-      <div class="panel">
-        <h2>Rodyti</h2>
-        <label class="check"><input type="checkbox" id="onlyHits" checked> Tik atitinkančius raktažodžius</label>
-        <label class="check"><input type="checkbox" id="onlyOpen"> Tik su neišpasibaigusiu terminu</label>
-        <label class="check"><input type="checkbox" id="scopeAll"> Įtraukti nestebimas savivaldybes</label>
-        <div style="margin-top:10px"><select id="sortFilter"><option value="">Visos rūšys</option></select></div>
-        <div style="margin-top:8px">
-          <select id="order">
-            <option value="score">Svarbiausi viršuje</option>
-            <option value="date">Naujausi registruoti</option>
-            <option value="due">Artimiausias terminas</option>
-            <option value="title">Pagal pavadinimą</option>
-          </select>
-        </div>
-        <div style="margin-top:8px"><input type="search" id="q" placeholder="Paieška tekste"></div>
+      <div class="fset" id="fsTap">
+        <h2>Projektai</h2>
+        <label class="ck"><input type="checkbox" id="onlyHits" checked> Tik su raktažodžiais</label>
+        <label class="ck"><input type="checkbox" id="onlyOpen"> Tik su galiojančiu terminu</label>
+        <label class="ck"><input type="checkbox" id="scopeAll"> Ir nestebimos savivaldybės</label>
+        <select id="sortFilter"><option value="">Visos rūšys</option></select>
+        <select id="order">
+          <option value="due">Artimiausias terminas viršuje</option>
+          <option value="score">Svarbiausi viršuje</option>
+          <option value="date">Naujausi registruoti</option>
+          <option value="title">Pagal pavadinimą</option>
+        </select>
       </div>
 
-      <div class="panel">
-        <h2>Papildomi raktažodžiai</h2>
-        <textarea id="kw" spellcheck="false" style="min-height:110px" placeholder="Po vieną eilutėje"></textarea>
-        <p class="hint">Pagrindinis sąrašas — repozitorijos <code>keywords.txt</code>. Čia įrašyti veikia tik šioje naršyklėje.</p>
-        <div class="row"><button class="btn" id="apply">Taikyti</button></div>
-      </div>
-
-      <div class="panel" id="tarPanel" hidden>
+      <div class="fset" id="fsTar" hidden>
         <h2>Teisės aktai</h2>
-        <label class="check"><input type="radio" name="tarSet" value="upcoming" checked> Dar neįsigalioję</label>
-        <label class="check"><input type="radio" name="tarSet" value="recent"> Naujai paskelbti</label>
-        <div style="margin-top:10px">
-          <label class="check"><input type="checkbox" id="tarHits" checked> Tik atitinkančius raktažodžius</label>
-          <label class="check"><input type="checkbox" id="tarScope"> Įtraukti nestebimas savivaldybes</label>
-        </div>
+        <label class="ck"><input type="radio" name="tarSet" value="upcoming" checked> Dar neįsigalioję</label>
+        <label class="ck"><input type="radio" name="tarSet" value="recent"> Naujai paskelbti</label>
+        <label class="ck"><input type="checkbox" id="tarHits" checked> Tik su raktažodžiais</label>
+        <label class="ck"><input type="checkbox" id="tarScope"> Ir nestebimos savivaldybės</label>
       </div>
 
-      <div class="panel">
-        <div class="count" id="statBig">—<small id="statSmall">projektų</small></div>
-        <div class="row"><button class="btn ghost" id="csv">Atsisiųsti CSV</button></div>
+      <div class="fset">
+        <h2>Paieška</h2>
+        <input type="search" id="q" placeholder="Ieškoti tekste">
+      </div>
+
+      <div class="fset">
+        <h2>Papildomi raktažodžiai</h2>
+        <textarea id="kw" spellcheck="false" placeholder="Po vieną eilutėje"></textarea>
+        <p class="hint">Veikia tik šioje naršyklėje. Nuolatinis sąrašas yra repozitorijos faile keywords.txt.</p>
+        <button class="btn" id="apply">Taikyti</button>
+      </div>
+
+      <div class="fset">
+        <p class="tally" id="tally"><b>—</b>rodoma</p>
+        <button class="btn quiet" id="csv">Atsisiųsti CSV</button>
       </div>
     </aside>
 
-    <main id="out"><div class="empty"><p>Kraunami duomenys…</p></div></main>
+    <main id="list"><div class="blank"><p>Kraunami duomenys.</p></div></main>
   </div>
 
-  <footer style="margin-top:34px;padding-top:14px;border-top:1px solid var(--rule);font-size:12.5px;color:var(--muted);max-width:72ch">
+  <footer>
     Duomenų šaltinis <a href="https://www.lrs.lt" target="_blank" rel="noopener">www.lrs.lt</a>,
-    teikėjas Lietuvos Respublikos Seimo kanceliarija. Naudojama pagal
-    <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC&nbsp;BY&nbsp;4.0</a>
-    licenciją. Duomenys generuojami dinamiškai, todėl galimi struktūros pakeitimai.
+    teikėjas Lietuvos Respublikos Seimo kanceliarija, naudojama pagal
+    <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC&nbsp;BY&nbsp;4.0</a>.
+    Duomenys generuojami dinamiškai, todėl galimi struktūros pakeitimai.
   </footer>
 </div>
 
@@ -151,16 +206,47 @@ const esc = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;
 const ltDate = s => (s||"").slice(0,10).replace(/\./g,"-");
 const todayISO = new Date().toISOString().slice(0,10);
 
+function daysUntil(iso){
+  if(!iso || iso.length < 10) return null;
+  const b = new Date(iso + "T00:00:00Z");
+  if(isNaN(b)) return null;
+  return Math.round((b - new Date(todayISO + "T00:00:00Z")) / 86400000);
+}
+function urgency(d){
+  if(d === null) return "";
+  if(d <= 3) return "u1";
+  if(d <= 10) return "u2";
+  return "u3";
+}
+function dayWord(n){
+  const a = Math.abs(n) % 100, b = Math.abs(n) % 10;
+  if(a >= 11 && a <= 19) return "dienų";
+  if(b === 1) return "diena";
+  if(b === 0) return "dienų";
+  return "dienos";
+}
+// Laiko stulpelis kaireje - pagrindinis eilutes elementas.
+function clockHTML(iso, label){
+  const d = daysUntil(iso);
+  if(d === null) return '<div class="clock"><span class="plain">' + esc(label || "") + '</span></div>';
+  if(d < 0){
+    return '<div class="clock"><span class="d past">–</span>' +
+           '<div class="lbl">terminas baigėsi</div><div class="when">' + esc(iso) + '</div></div>';
+  }
+  return '<div class="clock"><span class="d">' + d + '</span>' +
+         '<div class="lbl">' + dayWord(d) + '</div><div class="when">' + esc(iso) + '</div></div>';
+}
+
 let index = [], loaded = new Map(), docs = [], extraKw = [];
 let tar = null, tab = "tap";
 
 async function loadIndex(){
   const r = await fetch("data/index.json", {cache:"no-store"});
-  if(!r.ok) throw new Error("Nerastas data/index.json — ar jau suveikė pirmasis nuskaitymas?");
+  if(!r.ok) throw new Error("Nerastas data/index.json. Paleiskite workflow rankiniu būdu.");
   const j = await r.json();
   index = j.days || [];
-  document.getElementById("feedinfo").innerHTML = index.length
-    ? "Sukaupta <b>" + index.length + "</b> dienų · naujausia " + esc(index[0].date)
+  document.getElementById("stamp").innerHTML = index.length
+    ? "Naujausi duomenys <b>" + esc(index[0].date) + "</b>, sukaupta " + index.length + " " + dayWord(index.length)
     : "Duomenų dar nėra";
 }
 
@@ -209,11 +295,11 @@ function highlight(text, hits){
 function currentView(){
   const onlyHits=document.getElementById("onlyHits").checked;
   const onlyOpen=document.getElementById("onlyOpen").checked;
+  const scopeAll=document.getElementById("scopeAll").checked;
   const sortF=document.getElementById("sortFilter").value;
   const order=document.getElementById("order").value;
   const q=fold(document.getElementById("q").value.trim());
 
-  const scopeAll = document.getElementById("scopeAll").checked;
   let list = docs.map(d=>({d, hits: allHits(d)}));
   if(!scopeAll) list = list.filter(x=>x.d.scope !== false);
   if(onlyHits) list = list.filter(x=>x.hits.length);
@@ -222,54 +308,64 @@ function currentView(){
   if(q) list = list.filter(x=>haystack(x.d).includes(q));
 
   const cmp={
+    due:(a,b)=> (a.d.nextDue||"9999").localeCompare(b.d.nextDue||"9999"),
     score:(a,b)=> ((b.d.score??-1)-(a.d.score??-1)) || (b.d.regDate||"").localeCompare(a.d.regDate||""),
     date:(a,b)=> (b.d.regDate||"").localeCompare(a.d.regDate||""),
-    due:(a,b)=> (a.d.nextDue||"9999").localeCompare(b.d.nextDue||"9999"),
     title:(a,b)=> a.d.title.localeCompare(b.d.title,"lt")
   }[order];
   return list.sort(cmp);
 }
 
+function heroHTML(view){
+  const soon = view.filter(x=>x.d.nextDue && daysUntil(x.d.nextDue) >= 0)
+                   .sort((a,b)=>a.d.nextDue.localeCompare(b.d.nextDue))[0];
+  if(!soon) return "";
+  const d = daysUntil(soon.d.nextDue);
+  return '<div class="next"><span class="count">' + d + '</span>' +
+    '<span class="what">' + dayWord(d) + ' iki artimiausio derinimo termino: ' +
+    '<a href="' + esc(soon.d.url) + '" target="_blank" rel="noopener">' +
+    esc(soon.d.title.slice(0,110)) + '</a></span></div>';
+}
+
 function render(){
-  const out=document.getElementById("out"), view=currentView();
-  document.getElementById("statBig").innerHTML = view.length +
-    '<small>rodoma iš ' + docs.length + ' projektų</small>';
+  const out=document.getElementById("list"), view=currentView();
+  document.getElementById("tally").innerHTML = '<b>' + view.length + '</b>rodoma iš ' + docs.length;
+  document.getElementById("hero").innerHTML = heroHTML(view);
 
   if(!view.length){
-    out.innerHTML='<div class="empty"><p>Nė vienas projektas neatitinka filtrų. Praplėskite laikotarpį arba išjunkite „Tik atitinkančius“.</p></div>';
+    out.innerHTML='<div class="blank"><p>Nė vienas projektas neatitinka filtrų. Išjunkite „Tik su raktažodžiais“ arba praplėskite laikotarpį.</p></div>';
     return;
   }
 
   out.innerHTML = view.map(({d,hits})=>{
-    const due = d.nextDue ? '<span class="chip due">derinti iki '+d.nextDue+'</span>'
-              : (d.lastDue ? '<span class="chip">terminas baigėsi '+d.lastDue+'</span>' : "");
-    const last = (d.statusChain||[])[ (d.statusChain||[]).length-1 ];
-    const sc = (d.score!=null) ? '<span class="chip sc">svarba '+d.score+'</span>' : "";
-
-    return '<article class="item'+(hits.length?" hit":"")+(d.score===3?" s3":"")+'">'+
-      '<h3><a href="'+esc(d.url)+'" target="_blank" rel="noopener">'+highlight(d.title,hits)+'</a></h3>'+
+    const dd = d.nextDue ? daysUntil(d.nextDue) : null;
+    const clock = d.nextDue ? clockHTML(d.nextDue)
+                : clockHTML(null, "registruota " + (d.regDate||""));
+    const last = (d.statusChain||[])[(d.statusChain||[]).length-1];
+    return '<article class="row ' + (d.nextDue ? urgency(dd) : "") + '">' + clock +
+      '<div><h3><a href="'+esc(d.url)+'" target="_blank" rel="noopener">'+highlight(d.title,hits)+'</a></h3>'+
       '<div class="meta">'+
-        '<span><b>'+esc(d.sort)+'</b></span>'+
+        '<span class="k">'+esc(d.sort)+'</span>'+
         '<span>Nr. '+esc(d.regNo)+'</span>'+
-        '<span>registruota '+esc(d.regDate)+'</span>'+
         ((d.initiators||[]).length?'<span>'+esc(d.initiators[0])+'</span>':"")+
         ((d.preparedBy||[]).length?'<span>rengė '+esc(d.preparedBy[0])+'</span>':"")+
         (d.scope===false?'<span>už stebimo rato</span>':"")+
       '</div>'+
-      (d.why?'<p class="why">'+esc(d.why)+'</p>':"")+
-      '<div>'+sc+'<span class="chip status">'+esc(d.statusLt||d.status)+'</span>'+due+
-        hits.map(h=>'<span class="chip kw">'+esc(h)+'</span>').join("")+'</div>'+
-      (last?'<div class="strip"><span class="when">'+esc((last.from||"").slice(0,16))+'</span> — '+esc(last.op)+'</div>':"")+
-      ((d.files||[]).length?'<div class="strip files">'+d.files.slice(0,4).map(f=>
+      (d.why?'<p class="quote">'+esc(d.why)+'</p>':"")+
+      '<div><span class="tag state">'+esc(d.statusLt||d.status)+'</span>'+
+        (d.score!=null?'<span class="tag">svarba '+d.score+'</span>':"")+
+        hits.map(h=>'<span class="tag">'+esc(h)+'</span>').join("")+'</div>'+
+      (last?'<div class="files" style="color:var(--faint)">'+esc((last.from||"").slice(0,16))+' — '+esc(last.op)+'</div>':"")+
+      ((d.files||[]).length?'<div class="files">'+d.files.slice(0,4).map(f=>
         '<a href="'+esc(f.url)+'" target="_blank" rel="noopener">'+esc(f.kind||"Dokumentas")+'</a>').join("")+'</div>':"")+
       ((d.coord||[]).length?'<details><summary>Derinimas: '+(d.coordCount||d.coord.length)+' institucijų</summary><ul>'+
         d.coord.slice(0,25).map(c=>'<li>'+esc(c.by)+(c.until?" — iki "+ltDate(c.until):"")+'</li>').join("")+
-        ((d.coordCount||d.coord.length)>d.coord.length?'<li>… ir dar '+((d.coordCount||0)-d.coord.length)+'</li>':"")+'</ul></details>':"")+
+        ((d.coordCount||d.coord.length)>d.coord.length?'<li>ir dar '+((d.coordCount||0)-d.coord.length)+'</li>':"")+'</ul></details>':"")+
       ((d.links||[]).length?'<details><summary>Susiję dokumentai: '+d.links.length+'</summary><ul>'+
         d.links.slice(0,25).map(l=>'<li>'+esc(l.type)+": "+
           (l.url?'<a href="'+esc(l.url)+'" target="_blank" rel="noopener">'+esc(l.title||"atidaryti")+'</a>':esc(l.title))+'</li>').join("")+
-        (d.links.length>25?'<li>… ir dar '+(d.links.length-25)+'</li>':"")+'</ul></details>':"")+
-    '</article>';
+        (d.links.length>25?'<li>ir dar '+(d.links.length-25)+'</li>':"")+'</ul></details>':"")+
+      '</div></article>';
   }).join("");
 }
 
@@ -278,7 +374,6 @@ async function loadTar(){
   const r = await fetch("data/tar.json", {cache:"no-store"});
   tar = r.ok ? await r.json() : {recent:[],upcoming:[],notes:["Failas data/tar.json dar nesugeneruotas."]};
 }
-
 function tarView(){
   if(!tar) return [];
   const set = document.querySelector('input[name=tarSet]:checked').value;
@@ -289,42 +384,48 @@ function tarView(){
   if(!scopeAll) rows = rows.filter(r=>r.scope !== false);
   if(onlyHits) rows = rows.filter(r=>(r.hits||[]).length);
   if(q) rows = rows.filter(r=>fold([r.pavadinimas,r.rusis,r.priemusi_inst,r.excerpt].join(" ")).includes(q));
-  return rows;
+  return set === "upcoming"
+    ? rows.sort((a,b)=>(a.isigalioja||"9999").localeCompare(b.isigalioja||"9999"))
+    : rows.sort((a,b)=>(b.paskelbta_tar||"").localeCompare(a.paskelbta_tar||""));
 }
-
 function renderTar(){
-  const out = document.getElementById("out"), rows = tarView();
+  const out = document.getElementById("list"), rows = tarView();
   const set = document.querySelector('input[name=tarSet]:checked').value;
-  document.getElementById("statBig").innerHTML = rows.length +
-    '<small>' + (set==="upcoming" ? "įsigalios artimiausiu metu" : "naujai paskelbta") + '</small>';
+  document.getElementById("tally").innerHTML = '<b>' + rows.length + '</b>' +
+    (set==="upcoming" ? "įsigalios" : "paskelbta");
 
-  const notes = (tar && tar.notes || []).map(n=>'<div class="note">'+esc(n)+'</div>').join("");
+  const first = rows.find(r=>r.isigalioja && daysUntil(r.isigalioja) >= 0);
+  document.getElementById("hero").innerHTML = (set==="upcoming" && first)
+    ? '<div class="next"><span class="count">' + daysUntil(first.isigalioja) + '</span>' +
+      '<span class="what">' + dayWord(daysUntil(first.isigalioja)) + ' iki artimiausio įsigaliojimo: ' +
+      '<a href="' + esc(first.nuoroda||"#") + '" target="_blank" rel="noopener">' +
+      esc((first.pavadinimas||"").slice(0,110)) + '</a></span></div>'
+    : "";
+
+  const flags = (tar && tar.notes || []).map(n=>'<div class="flag">'+esc(n)+'</div>').join("");
   if(!rows.length){
-    out.innerHTML = notes + '<div class="empty"><p>Nieko neatitinka. Išjunkite „Tik atitinkančius“ arba įtraukite savivaldybių aktus.</p></div>';
+    out.innerHTML = flags + '<div class="blank"><p>Nieko neatitinka. Išjunkite „Tik su raktažodžiais“ arba įtraukite nestebimas savivaldybes.</p></div>';
     return;
   }
 
-  out.innerHTML = notes + rows.map(r=>{
+  out.innerHTML = flags + rows.map(r=>{
     const hits = r.hits || [];
-    const when = set==="upcoming"
-      ? '<span class="chip due">įsigalioja ' + esc(r.isigalioja||"") + '</span>'
-      : '<span class="chip">paskelbta ' + esc(r.paskelbta_tar||"") + '</span>';
-    return '<article class="item'+(hits.length?" hit":"")+'">'+
-      '<h3><a href="'+esc(r.nuoroda||"#")+'" target="_blank" rel="noopener">'+highlight(r.pavadinimas||"",hits)+'</a></h3>'+
+    const dd = r.isigalioja ? daysUntil(r.isigalioja) : null;
+    const clock = set==="upcoming"
+      ? clockHTML(r.isigalioja)
+      : clockHTML(null, "paskelbta " + (r.paskelbta_tar||""));
+    return '<article class="row ' + (set==="upcoming" ? urgency(dd) : "") + '">' + clock +
+      '<div><h3><a href="'+esc(r.nuoroda||"#")+'" target="_blank" rel="noopener">'+highlight(r.pavadinimas||"",hits)+'</a></h3>'+
       '<div class="meta">'+
-        '<span><b>'+esc(r.rusis||"")+'</b></span>'+
+        '<span class="k">'+esc(r.rusis||"")+'</span>'+
         (r.atv_dok_nr?'<span>Nr. '+esc(r.atv_dok_nr)+'</span>':"")+
         (r.priemusi_inst?'<span>'+esc(r.priemusi_inst)+'</span>':"")+
-        (r.national===false?'<span>savivaldybės aktas</span>':"")+
+        (set!=="upcoming"&&r.isigalioja?'<span>įsigalioja '+esc(r.isigalioja)+'</span>':"")+
         (r.scope===false?'<span>už stebimo rato</span>':"")+
       '</div>'+
-      (r.excerpt?'<p class="why">'+highlight(r.excerpt,hits)+'</p>':"")+
-      '<div>'+when+
-        (r.isigalioja&&set!=="upcoming"?'<span class="chip">įsigalioja '+esc(r.isigalioja)+'</span>':"")+
-        (r.negalioja?'<span class="chip">netenka galios '+esc(r.negalioja)+'</span>':"")+
-        hits.map(h=>'<span class="chip kw">'+esc(h)+'</span>').join("")+
-      '</div>'+
-    '</article>';
+      (r.excerpt?'<p class="quote">'+highlight(r.excerpt,hits)+'</p>':"")+
+      '<div>'+hits.map(h=>'<span class="tag">'+esc(h)+'</span>').join("")+'</div>'+
+      '</div></article>';
   }).join("");
 }
 
@@ -332,15 +433,15 @@ function paint(){ tab==="tap" ? render() : renderTar(); }
 
 async function switchTab(next){
   tab = next;
-  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on", b.dataset.tab===next));
-  document.getElementById("tarPanel").hidden = next!=="tar";
-  document.querySelectorAll("aside .panel").forEach(p=>{
-    if(p.id==="tarPanel") return;
-    const keep = p.querySelector("#statBig") || p.querySelector("#q");
-    if(!keep) p.hidden = next==="tar";
-  });
-  if(next==="tar"){ await loadTar(); }
+  document.querySelectorAll(".switch button").forEach(b=>b.classList.toggle("on", b.dataset.tab===next));
+  document.getElementById("fsTar").hidden = next!=="tar";
+  document.getElementById("fsTap").hidden = next==="tar";
+  document.getElementById("fsRange").hidden = next==="tar";
+  if(next==="tar") await loadTar();
+  const el = document.getElementById("list");
+  el.style.opacity = "0";
   paint();
+  requestAnimationFrame(()=>{ el.style.opacity = "1"; });
 }
 
 function refreshFilters(){
@@ -360,7 +461,7 @@ document.getElementById("range").addEventListener("change", reload);
   document.getElementById(id).addEventListener("change", paint));
 ["tarHits","tarScope"].forEach(id=>document.getElementById(id).addEventListener("change", paint));
 document.querySelectorAll('input[name=tarSet]').forEach(r=>r.addEventListener("change", paint));
-document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>switchTab(b.dataset.tab)));
+document.querySelectorAll(".switch button").forEach(b=>b.addEventListener("click",()=>switchTab(b.dataset.tab)));
 let qt; document.getElementById("q").addEventListener("input",()=>{clearTimeout(qt);qt=setTimeout(paint,180);});
 document.getElementById("apply").addEventListener("click",()=>{
   extraKw=document.getElementById("kw").value.split("\n").map(s=>s.trim()).filter(Boolean);
@@ -368,30 +469,26 @@ document.getElementById("apply").addEventListener("click",()=>{
 });
 
 document.getElementById("csv").addEventListener("click",()=>{
+  let rows;
   if(tab==="tar"){
-    const set=document.querySelector('input[name=tarSet]:checked').value;
-    const rr=[["Pavadinimas","Rūšis","Nr.","Priėmė","Registruota","Įsigalioja","Raktažodžiai","Nuoroda"]];
-    tarView().forEach(r=>rr.push([r.pavadinimas,r.rusis,r.atv_dok_nr,r.priemusi_inst,r.registracija,r.isigalioja,(r.hits||[]).join("; "),r.nuoroda]));
-    const c="\uFEFF"+rr.map(r=>r.map(x=>'"'+String(x??"").replace(/"/g,'""')+'"').join(";")).join("\r\n");
-    const el=document.createElement("a");
-    el.href=URL.createObjectURL(new Blob([c],{type:"text/csv;charset=utf-8"}));
-    el.download="tar-"+set+"-"+todayISO+".csv"; el.click(); URL.revokeObjectURL(el.href);
-    return;
+    rows=[["Pavadinimas","Rūšis","Nr.","Priėmė","Paskelbta","Įsigalioja","Raktažodžiai","Nuoroda"]];
+    tarView().forEach(r=>rows.push([r.pavadinimas,r.rusis,r.atv_dok_nr,r.priemusi_inst,r.paskelbta_tar,r.isigalioja,(r.hits||[]).join("; "),r.nuoroda]));
+  }else{
+    rows=[["Pavadinimas","Rūšis","Nr.","Registruota","Būsena","Iniciatorius","Derinti iki","Svarba","Kodėl","Raktažodžiai","Nuoroda"]];
+    currentView().forEach(({d,hits})=>rows.push([d.title,d.sort,d.regNo,d.regDate,d.statusLt||d.status,
+      (d.initiators||[]).join("; "),d.nextDue,d.score??"",d.why||"",hits.join("; "),d.url]));
   }
-  const rows=[["Pavadinimas","Rūšis","Nr.","Registruota","Būsena","Iniciatorius","Derinti iki","Svarba","Kodėl","Raktažodžiai","Nuoroda"]];
-  currentView().forEach(({d,hits})=>rows.push([d.title,d.sort,d.regNo,d.regDate,d.statusLt||d.status,
-    (d.initiators||[]).join("; "),d.nextDue,d.score??"",d.why||"",hits.join("; "),d.url]));
   const csv="\uFEFF"+rows.map(r=>r.map(c=>'"'+String(c??"").replace(/"/g,'""')+'"').join(";")).join("\r\n");
   const a=document.createElement("a");
   a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
-  a.download="tais-"+todayISO+".csv"; a.click(); URL.revokeObjectURL(a.href);
+  a.download="teisekura-"+todayISO+".csv"; a.click(); URL.revokeObjectURL(a.href);
 });
 
 (async()=>{
   try{ await loadIndex(); await reload(); }
   catch(e){
-    document.getElementById("out").innerHTML='<div class="err">'+esc(e.message)+'</div>';
-    document.getElementById("feedinfo").textContent="Duomenų nėra";
+    document.getElementById("list").innerHTML='<div class="flag">'+esc(e.message)+'</div>';
+    document.getElementById("stamp").textContent="Duomenų nėra";
   }
 })();
 </script>
