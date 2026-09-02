@@ -23,6 +23,10 @@ from datetime import date, datetime, timedelta, timezone
 from filters import excluded, fold, in_scope, load_list
 
 BASE = "https://get.data.gov.lt/datasets/gov/lrsk/teises_aktai/Dokumentas"
+
+# Jei nustatytas, uzklausos eina per tarpini serveri (Cloudflare Worker),
+# apeinanti WAF bloka pries GitHub Actions IP. Zr. proxy-worker/README.md.
+PROXY = os.environ.get("TAR_PROXY_URL", "").rstrip("/")
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "docs", "data", "tar.json")
 
@@ -57,18 +61,34 @@ HEADERS = {
 }
 
 
+def _proxied(url: str) -> str:
+    """Persuka uzklausa per tarpini serveri, jei jis sukonfiguruotas."""
+    upstream_path = url[len("https://get.data.gov.lt"):]
+    return PROXY + "/?path=" + urllib.parse.quote(upstream_path, safe="")
+
+
 def _get(url: str):
-    req = urllib.request.Request(url, headers=HEADERS)
+    target = _proxied(url) if PROXY else url
+    req = urllib.request.Request(target, headers=HEADERS)
     try:
         with urllib.request.urlopen(req, timeout=120) as r:
             return json.load(r)
     except urllib.error.HTTPError as exc:
-        # Spinta prie klaidos prideda paaiskinima; be jo lieka tik speliojimas.
         try:
-            detail = exc.read().decode("utf-8", "replace")[:600].replace("\n", " ")
+            body = exc.read().decode("utf-8", "replace")
         except Exception:  # noqa: BLE001
-            detail = "(atsakymo kuno perskaityti nepavyko)"
-        raise RuntimeError(f"{exc.code} {exc.reason} | serveris atsake: {detail}") from None
+            body = ""
+        if "<html" in body[:200].lower():
+            # HTML puslapis vietoj JSON klaidos rodo, kad blokuoja apsaugos
+            # sistema (WAF) pagal siuncianti IP, o ne pati Spinta API.
+            # Turinio pakeisti nepadeda - GitHub Actions serveriu adresai
+            # priklauso zinomiems debesijos diapazonams.
+            hint = (" (per proxy - vadinasi, ir jis blokuojamas)" if PROXY
+                    else " (be proxy - zr. proxy-worker/README.md)")
+            raise RuntimeError(
+                f"{exc.code} {exc.reason} - WAF grazino HTML vietoj JSON{hint}."
+            ) from None
+        raise RuntimeError(f"{exc.code} {exc.reason} | serveris atsake: {body[:400]}") from None
 
 
 def fetch(query: str):
@@ -260,6 +280,8 @@ def main():
 
     inscope = [r for r in recent + upcoming if r.get("scope") and r.get("hits")]
     newest = max((r.get("paskelbta_tar") or "")[:10] for r in recent) if recent else "-"
+    if PROXY:
+        print(f"TAR: naudojamas proxy {PROXY}")
     print(f"TAR: {len(recent)} naujai paskelbtu (nuo {since}, naujausias {newest}), "
           f"{len(upcoming)} dar neisigaliojusiu, "
           f"{len(inscope)} atitinka raktazodzius stebimame rate")
