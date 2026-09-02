@@ -281,27 +281,60 @@ def main():
         if excerpt:
             row["excerpt"] = excerpt
 
+    # SVARBU: nesekmingas pjuvis niekada neistrina anksciau surinktu
+    # duomenu. Serveris nepastovus - jei siandien "isigalioja" nepavyko, o
+    # vakar pavyko, senas rezultatas islieka, kol jo nepakeicia naujesnis
+    # sekmingas paleidimas. Be sito kiekvienas nepavykes bandymas tyliai
+    # istrindavo viska, ka jau buvome surinke.
+    previous = {"recent": [], "upcoming": []}
+    if os.path.exists(OUT):
+        try:
+            with open(OUT, encoding="utf-8") as f:
+                previous = json.load(f)
+        except Exception:  # noqa: BLE001
+            pass
+
+    def merge(new_rows, old_rows, got_new):
+        if got_new:
+            fresh = {r["_id"]: clean(r) for r in new_rows if r.get("_id")}
+            old = {r["_id"]: r for r in old_rows if r.get("_id")}
+            old.update(fresh)
+            return list(old.values())
+        return old_rows  # nesekme - paliekame kas buvo
+
+    merged_recent = merge(recent, previous.get("recent", []), got_new=bool(recent) or "Naujai paskelbtu pjuvio nuskaityti nepavyko." not in notes)
+    merged_upcoming = merge(upcoming, previous.get("upcoming", []),
+                             got_new=not any("Neisigaliojusiu pjuvio" in n for n in notes))
+
+    stale = []
+    if merged_recent and not recent:
+        stale.append("naujai paskelbti")
+    if merged_upcoming and not upcoming:
+        stale.append("neisigalioje")
+    if stale:
+        notes.append(f"Rodomi ankstesnio sekmingo paleidimo duomenys ({', '.join(stale)}) - siandien nuskaityti nepavyko.")
+
     payload = {
         "source": "www.lrs.lt / Seimo kanceliarija, rinkinys od000139, CC BY 4.0",
         "updated": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "recentSince": since,
         "recentField": "paskelbta_tar",
         "notes": notes,
-        "recent": [clean(r) for r in recent],
-        "upcoming": [clean(r) for r in upcoming],
+        "recent": merged_recent,
+        "upcoming": merged_upcoming,
     }
 
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, separators=(",", ":"))
 
-    inscope = [r for r in recent + upcoming if r.get("scope") and r.get("hits")]
-    newest = max((r.get("paskelbta_tar") or "")[:10] for r in recent) if recent else "-"
+    inscope = [r for r in merged_recent + merged_upcoming if r.get("scope") and r.get("hits")]
+    newest = max((r.get("paskelbta_tar") or "")[:10] for r in merged_recent) if merged_recent else "-"
     if PROXY:
         print(f"TAR: naudojamas proxy {PROXY}")
-    print(f"TAR: {len(recent)} naujai paskelbtu (nuo {since}, naujausias {newest}), "
-          f"{len(upcoming)} dar neisigaliojusiu, "
-          f"{len(inscope)} atitinka raktazodzius stebimame rate")
+    print(f"TAR: siandien gauta {len(recent)} naujai paskelbtu, {len(upcoming)} neisigaliojusiu "
+          f"| issaugota is viso {len(merged_recent)} + {len(merged_upcoming)} "
+          f"(naujausias {newest}), {len(inscope)} atitinka raktazodzius stebimame rate")
     for n in notes:
         print("  ! " + n)
 
