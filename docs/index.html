@@ -413,13 +413,14 @@ function renderTar(){
     const dd = r.isigalioja ? daysUntil(r.isigalioja) : null;
     const clock = set==="upcoming"
       ? clockHTML(r.isigalioja)
-      : clockHTML(null, "paskelbta " + (r.paskelbta_tar||""));
+      : clockHTML(null, "priimta " + (r.priimtas || r.paskelbta_tar || ""));
     return '<article class="row ' + (set==="upcoming" ? urgency(dd) : "") + '">' + clock +
       '<div><h3><a href="'+esc(r.nuoroda||"#")+'" target="_blank" rel="noopener">'+highlight(r.pavadinimas||"",hits)+'</a></h3>'+
       '<div class="meta">'+
         '<span class="k">'+esc(r.rusis||"")+'</span>'+
         (r.atv_dok_nr?'<span>Nr. '+esc(r.atv_dok_nr)+'</span>':"")+
         (r.priemusi_inst?'<span>'+esc(r.priemusi_inst)+'</span>':"")+
+        (r.priimtas?'<span>priimta '+esc(r.priimtas)+'</span>':"")+
         (set!=="upcoming"&&r.isigalioja?'<span>įsigalioja '+esc(r.isigalioja)+'</span>':"")+
         (r.scope===false?'<span>už stebimo rato</span>':"")+
       '</div>'+

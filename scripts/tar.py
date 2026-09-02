@@ -53,9 +53,14 @@ _FORMAT = None
 # Sarasas trumpas sazingai: kiekvienas laukas atskirai veikia, bet visi
 # sesiolika kartu su filtru grazina HTTP 500. Palikti tik tie, kurie
 # tikrai naudojami suvestineje.
+# Desimt lauku. Riba nezinoma tiksliai: 10 veikia, 16 grazindavo HTTP 500,
+# todel laikomes desimties. paskelbta_tar butinas - juo filtruojama ir
+# rikiuojama; rodomos vartotojui priemimo ir isigaliojimo datos.
+# galioj_busena isimta - suvestineje niekur nerodoma, o vieta reikalinga
+# dokumento numeriui (atv_dok_nr), kuris reikalingas citavimui.
 LIST_FIELDS = (
     "_id,pavadinimas,rusis,priemusi_inst,atv_dok_nr,nuoroda,"
-    "paskelbta_tar,isigalioja,galioj_busena,ar_nacionalinis"
+    "priimtas,paskelbta_tar,isigalioja,ar_nacionalinis"
 )
 
 # Kuo arciau to, ka siuncia narsykle. Ankstesnis variantas su
