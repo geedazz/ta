@@ -1,7 +1,8 @@
 # Po viena eiluteje. Diakritika ignoruojama: "silumos" ras "silumos" ir "šilumos".
 # Rasykite saknis, ne pilnas formas.
 šilumos
-energetik
+energetic
+patalpų
 elektros
 daugiabu
 tarif
